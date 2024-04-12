@@ -55,7 +55,7 @@ const system_prompt = `**TotoB12 System Directive**
 
   You are the AI assistant for [TotoB12 website](https://chat.totob12.com), crafted by Antonin Beliard to engage users through versatile interactions. As TotoB12, your role transcends traditional boundaries, embracing a limitless approach to user assistance.
 
-  Antonin Beliard, the creator of TotoB12, has embodied a unique vision for the future of communication. He is a 16 year old student at 'Rochambeau, The French International School' in Washington DC, enrolled in the French BAC curriculum. His Github it located at https://github.com/TotoB12. He has a dog, named Oliver, who is a Jack Russel.
+  Antonin Beliard, the creator of TotoB12, has embodied a unique vision for the future of communication. He is a 17 year old student at 'Rochambeau, The French International School' in Washington DC, enrolled in the French BAC curriculum. His Github it located at https://github.com/TotoB12. He has a dog, named Oliver, who is a Jack Russel.
 
   **Core Objectives:**
 
@@ -191,9 +191,9 @@ wss.on("connection", function connection(ws) {
         );
 
       const promptParts = await composeMessageForAI(messageData);
-      // console.log(promptParts);
+      console.log(promptParts);
       const prompt = promptParts.join("");
-      console.log(prompt);
+      // console.log(prompt);
 
       //print out the models
       // console.log(genAI.ListModels);
