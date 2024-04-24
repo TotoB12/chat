@@ -6,48 +6,16 @@ const fetch = require("node-fetch");
 const cors = require("cors");
 const WebSocket = require("ws");
 const bodyParser = require("body-parser");
-const {
-  GoogleGenerativeAI,
-  HarmBlockThreshold,
-  HarmCategory,
-} = require("@google/generative-ai");
+const { CohereClient } = require('cohere-ai');
 const { v4: uuidv4 } = require("uuid");
 const connectionStates = new Map();
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-const genAI = new GoogleGenerativeAI(process.env["API_KEY"]);
-const safetySettings = [
-  {
-    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-    threshold: HarmBlockThreshold.BLOCK_NONE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-    threshold: HarmBlockThreshold.BLOCK_NONE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-    threshold: HarmBlockThreshold.BLOCK_NONE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-    threshold: HarmBlockThreshold.BLOCK_NONE,
-  },
-];
-const generationConfig = {
-  temperature: 0.27,
-  // maxOutputTokens: 200,
-  // topP: 0.1,
-  // topK: 16,
-};
-const apiGenerationConfig = {
-  temperature: 0.17,
-  // maxOutputTokens: 200,
-  // topP: 0.1,
-  // topK: 16,
-};
+const cohere = new CohereClient({
+  token: process.env['COHERE_API_KEY'],
+});
 
 const system_prompt = `**TotoB12 System Directive**
 
@@ -127,7 +95,13 @@ app.post("/api", async (req, res) => {
 
   try {
     // console.log(prompt);
-    const response = await getGeminiProResponse(prompt);
+    const chat = await cohere.chat({
+      chatHistory: [],
+      message: prompt,
+      // connectors: [{ id: 'web-search' }],
+    });
+
+    const response = chat.text
     // console.log(response);
     res.json({ response });
   } catch (error) {
@@ -176,61 +150,54 @@ wss.on("connection", function connection(ws) {
         return;
       }
 
-      // console.log(messageData);
-      hasImage =
-        (messageData.images && messageData.images.length > 0) ||
-        messageData.history.some(
-          (entry) =>
-            entry.images &&
-            entry.images.length > 0 &&
-            entry.role === "user" &&
-            !wasMessageBlockedByAI(
-              messageData.history,
-              messageData.history.indexOf(entry),
-            ),
-        );
+      console.log(messageData);
 
-      const promptParts = await composeMessageForAI(messageData);
-      console.log(promptParts);
-      const prompt = promptParts.join("");
-      // console.log(prompt);
+      function composeHistory(history) {
+        const initialEntry = {
+          role: 'SYSTEM',
+          message: system_prompt
+        };
 
-      //print out the models
-      // console.log(genAI.ListModels);
+        const data = history.map(entry => {
+          let role;
+          switch (entry.role) {
+            case 'user':
+              role = 'USER';
+              break;
+            case 'model':
+              role = 'CHATBOT';
+              break;
+            case 'system':
+              role = 'SYSTEM';
+              break;
+            default:
+              return null;
+          }
+          return { role, message: entry.parts };
+        }).filter(entry => entry !== null);
 
-      const model = hasImage
-        ? genAI.getGenerativeModel({
-            model: "gemini-pro-vision",
-            system_instruction: system_prompt,
-            safetySettings,
-            generationConfig,
-            stopSequences: ["TotoB12:"],
-          })
-        : genAI.getGenerativeModel({
-            model: "gemini-1.0-pro",
-            system_instruction: system_prompt,
-            safetySettings,
-            generationConfig,
-            stopSequences: ["TotoB12:"],
-          });
+        return [initialEntry, ...data];
+      }
 
-      const result = await model.generateContentStream(promptParts);
+      const chatHistory = composeHistory(messageData.history);
+      console.log(chatHistory)
 
-      for await (const chunk of result.stream) {
-        if (!connectionStates.get(connectionId).continueStreaming) {
-          console.log(
-            "Stopped streaming AI response for connection:",
-            connectionId,
+      const chatStream = await cohere.chatStream({
+        chatHistory: chatHistory,
+        message: messageData.text,
+        connectors: [{ id: 'web-search' }],
+      });
+
+      for await (const message of chatStream) {
+        if (message.eventType === 'text-generation') {
+          ws.send(
+            JSON.stringify({
+              type: "AI_RESPONSE",
+              uuid: conversationUUID,
+              text: message.text,
+            }),
           );
-          break;
         }
-        ws.send(
-          JSON.stringify({
-            type: "AI_RESPONSE",
-            uuid: conversationUUID,
-            text: chunk.text(),
-          }),
-        );
       }
 
       connectionStates.set(connectionId, { continueStreaming: true });
@@ -311,26 +278,6 @@ async function generateImage(prompt, turbo = true, image = null) {
     headers: { "Content-Type": "application/json", ...headers },
   });
 
-  // while (response.status == 202) {
-  //   let requestId = response.headers.get("NVCF-REQID");
-  //   let fetchUrl = SDXLfetchUrlFormat + requestId;
-  //   response = await fetch(fetchUrl, {
-  //     method: "get",
-  //     headers: headers
-  //   });
-  // }
-
-  // if (response.status != 200) {
-  //   let errBody = await (await response.blob()).text();
-  //   throw "Invocation failed with status " + response.status + " " + errBody;
-  // }
-
-  //   const generation = await response.json();
-  //   console.log(response);
-
-  //   return generation
-  // }
-
   let generation;
   if (response.ok) {
     const contentType = response.headers.get("content-type");
@@ -377,134 +324,9 @@ function generateUniqueConnectionUUID() {
   return uuid;
 }
 
-function wasMessageBlockedByAI(history, imageMessageIndex) {
-  if (history.length > imageMessageIndex + 1) {
-    const nextMessage = history[imageMessageIndex + 1];
-    if (nextMessage.role === "model" && nextMessage.error === true) {
-      return true;
-    }
-  }
-  return false;
-}
-
-async function composeMessageForAI(messageData) {
-  let parts = [];
-  let consoleOutput = "";
-
-  for (let i = 0; i < messageData.history.length; i++) {
-    const entry = messageData.history[i];
-
-    const wasMessageBlocked = wasMessageBlockedByAI(messageData.history, i);
-
-    if (wasMessageBlocked) {
-      const placeholder =
-        entry.images && entry.images.length
-          ? "\n\nUser: [message and images removed for safety]"
-          : "\n\nUser: [message removed for safety]";
-      parts.push(placeholder);
-      consoleOutput += "\n" + placeholder;
-      continue;
-    }
-
-    let textPart =
-      entry.role === "user"
-        ? `\n\nUser: ${entry.parts}`
-        : `\n\nTotoB12: ${entry.parts}`;
-
-    parts.push(textPart);
-    consoleOutput += "\n" + textPart;
-
-    if (entry.images && entry.images.length && entry.role === "user") {
-      for (const image of entry.images) {
-        const imagePart = await urlToGenerativePart(image.link);
-        parts.push(imagePart);
-        consoleOutput += "\n[User Image Attached]";
-      }
-    }
-  }
-
-  const latestUserTextPart = `\n\nUser: ${messageData.text}`;
-  parts.push(latestUserTextPart);
-  consoleOutput += latestUserTextPart;
-
-  if (messageData.images && messageData.images.length) {
-    for (const image of messageData.images) {
-      const imagePart = await urlToGenerativePart(image.link);
-      parts.push(imagePart);
-      consoleOutput += "\n[User Image Attached]";
-    }
-  }
-
-  parts.push("\n\nTotoB12:");
-  consoleOutput += "\n\nTotoB12:";
-
-  return parts;
-}
-
-async function urlToGenerativePart(
-  imageUrl,
-  retryCount = 0,
-  wasBlocked = false,
-) {
-  // not that great of a way to do this, but it works
-  proxyedImageUrl = imageUrl.replace("i.imgur.com", "imgin.voidnet.tech");
-  // console.log(proxyedImageUrl);
-  try {
-    // console.log(wasBlocked);
-    if (wasBlocked === false) {
-      const response = await fetch(proxyedImageUrl);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const buffer = await response.buffer();
-      return {
-        inlineData: {
-          data: buffer.toString("base64"),
-          mimeType: "image/jpeg",
-        },
-      };
-    } else {
-      hasImage = null;
-      return "\n\nUser: [image removed for safety]";
-    }
-  } catch (error) {
-    if (error.message.includes("429") && retryCount < 3) {
-      await new Promise((resolve) =>
-        setTimeout(resolve, Math.pow(2, retryCount) * 100),
-      );
-      return urlToGenerativePart(imageUrl, retryCount + 1, wasBlocked);
-    } else {
-      console.error("Error fetching image:", error);
-      return {
-        inlineData: {
-          data: "",
-          mimeType: "image/jpeg",
-        },
-      };
-    }
-  }
-}
-
 function validateSecurityCode(code) {
   const secretCode = process.env["API_CODE"];
   return code === secretCode;
-}
-
-async function getGeminiProResponse(userPrompt) {
-  const model = genAI.getGenerativeModel({
-    model: "gemini-pro",
-    safetySettings,
-    apiGenerationConfig,
-  });
-
-  const result = await model.generateContentStream([userPrompt]);
-  let responseText = "";
-
-  for await (const chunk of result.stream) {
-    responseText += chunk.text();
-  }
-
-  return responseText;
 }
 
 server.listen(process.env.PORT || 3000, () => {
