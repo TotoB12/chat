@@ -922,14 +922,6 @@ function sendMessage() {
     return;
   }
 
-
-  const message = {
-    type: "user-message",
-    uuid: currentConversationUUID,
-    history: getHistory(),
-    text: userText,
-  };
-
   updateHistory("user", userText, false, []);
 
   createUserMessage({
@@ -947,6 +939,13 @@ function sendMessage() {
     updateChatBoxVisibility();
     isNewConversation = false;
   }
+
+  const message = {
+    type: "user-message",
+    uuid: currentConversationUUID,
+    history: getHistory(),
+    text: userText,
+  };
 
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(message));

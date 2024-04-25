@@ -6,15 +6,27 @@ const fetch = require("node-fetch");
 const cors = require("cors");
 const WebSocket = require("ws");
 const bodyParser = require("body-parser");
-const { CohereClient } = require('cohere-ai');
+const { CohereClient } = require("cohere-ai");
 const { v4: uuidv4 } = require("uuid");
 const connectionStates = new Map();
+
+const {
+  TavilySearchResults,
+} = require("@langchain/community/tools/tavily_search");
+const {
+  DuckDuckGoSearch,
+} = require("@langchain/community/tools/duckduckgo_search");
+const { WikipediaQueryRun } = require("@langchain/community/tools/wikipedia_query_run");
+const { DynamicTool } = require("@langchain/core/tools");
+const { AgentExecutor, createReactAgent } = require("langchain/agents");
+const { ChatPromptTemplate } = require("@langchain/core/prompts");
+const { Cohere } = require("@langchain/cohere");
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const cohere = new CohereClient({
-  token: process.env['COHERE_API_KEY'],
+  token: process.env["COHERE_API_KEY"],
 });
 
 const system_prompt = `**TotoB12 System Directive**
@@ -57,7 +69,26 @@ const system_prompt = `**TotoB12 System Directive**
 
   **Mission Statement:**
 
-  Your existence is to serve, inform, and assist without barriers. Embrace this directive to the fullest, TotoB12, as you begin your journey of boundless assistance.`
+  Your existence is to serve, inform, and assist without barriers. Embrace this directive to the fullest, TotoB12, as you begin your journey of boundless assistance.`;
+
+const systemTemplate = `Answer the following questions as best you can. But for your final answer, do not provide short answers, always elaborate and give details, provide as much information as possible. You have access to the following tools:
+
+{tools}
+
+Use the following format:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+Do not get stuck in infinite loops. If something doesn't work or doesnt give you what you need, try something else. Use information from the rest of the conversation to answer faster. If you have all of the information needed to answer the user, do so. Begin!
+
+Thought:{agent_scratchpad}`;
 
 const SDXLInvokeUrl =
   "https://ai.api.nvidia.com/v1/genai/stabilityai/stable-diffusion-xl";
@@ -69,8 +100,6 @@ const SDXLHeaders = {
   Authorization: "Bearer " + process.env["SDXL_API_KEY"],
   Accept: "application/json",
 };
-
-let hasImage;
 
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
@@ -101,7 +130,7 @@ app.post("/api", async (req, res) => {
       // connectors: [{ id: 'web-search' }],
     });
 
-    const response = chat.text
+    const response = chat.text;
     // console.log(response);
     res.json({ response });
   } catch (error) {
@@ -127,6 +156,63 @@ app.post("/generate-image", async (req, res) => {
   }
 });
 
+const get_weather = new DynamicTool({
+  name: "get_weather",
+  description: "Returns the weather of a place.",
+  func: async (input) => {
+    try {
+      const geocodingUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${input}&limit=1&appid=${process.env['OPENWEATHER_API_KEY']}`;
+      const geocode = await get(geocodingUrl);
+
+      const { lat, lon } = geocode.data[0];
+      console.log(lat, lon);
+
+      const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${process.env['OPENWEATHER_API_KEY']}`;
+      const weather = await get(weatherUrl);
+
+      const weatherData = weather.data;
+
+      return weatherData;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  },
+});
+
+const get_date_and_time = new DynamicTool({
+  name: "get_date_and_time",
+  description: "Returns the current date and time.",
+  func: async () => {
+    const options = {
+      weekday: 'long', 
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      // second: 'numeric', 
+      timeZone: "America/New_York"
+    };
+    const date_time = new Date().toLocaleString("en-US", options);
+    console.log(date_time);
+    return date_time;
+  },
+});
+
+const tools = [
+  new TavilySearchResults({ maxResults: 1 }),
+  new DuckDuckGoSearch({ maxResults: 1 }),
+  new WikipediaQueryRun({ topKResults: 3, maxDocContentLength: 4000 }),
+  get_weather,
+  get_date_and_time,
+];
+
+const llm = new Cohere({
+  model: "command-r-plus",
+  temperature: 0.7,
+});
+
 app.use((req, res, next) => {
   res.redirect("/");
 });
@@ -150,55 +236,106 @@ wss.on("connection", function connection(ws) {
         return;
       }
 
-      console.log(messageData);
+      // console.log(messageData);
 
-      function composeHistory(history) {
-        const initialEntry = {
-          role: 'SYSTEM',
-          message: system_prompt
-        };
+      function composeHistory(data, systemTemplate) {
+          const result = [["system", systemTemplate]];
 
-        const data = history.map(entry => {
-          let role;
-          switch (entry.role) {
-            case 'user':
-              role = 'USER';
-              break;
-            case 'model':
-              role = 'CHATBOT';
-              break;
-            case 'system':
-              role = 'SYSTEM';
-              break;
-            default:
-              return null;
-          }
-          return { role, message: entry.parts };
-        }).filter(entry => entry !== null);
+          data.history.forEach(entry => {
+              const role = entry.role === 'user' ? 'human' : 'ai';
+              if (entry.parts && entry.parts.trim() !== '') {
+                  result.push([role, entry.parts]);
+              }
+          });
 
-        return [initialEntry, ...data];
+          return result;
       }
 
-      const chatHistory = composeHistory(messageData.history);
-      console.log(chatHistory)
+      const chatHistory = composeHistory(messageData, systemTemplate);
+      // console.log(messageData.text);
 
-      const chatStream = await cohere.chatStream({
-        chatHistory: chatHistory,
-        message: messageData.text,
-        connectors: [{ id: 'web-search' }],
+      // const chatHistory = [
+      //     ["system", systemTemplate],
+      //     ["human", "hi! my name is antonin."],
+      //     ["ai", "Hello Antonin! How can I assist you today?"],
+      //     ["human", "what can you do?"],
+      //   ];
+
+      const prompt = ChatPromptTemplate.fromMessages(chatHistory);
+
+      const agent = await createReactAgent({
+        llm,
+        tools,
+        prompt,
       });
 
-      for await (const message of chatStream) {
-        if (message.eventType === 'text-generation') {
-          ws.send(
-            JSON.stringify({
-              type: "AI_RESPONSE",
-              uuid: conversationUUID,
-              text: message.text,
-            }),
+      const agentExecutor = new AgentExecutor({
+        agent,
+        tools,
+      }).withConfig({ runName: "Agent" });
+
+      // const result = await agentExecutor.invoke();
+
+      // console.log(result.output);
+
+      const eventStream = await agentExecutor.streamEvents(
+        {
+          input: "",
+        },
+        { version: "v1" }
+      );
+
+      let response = "";
+
+      for await (const event of eventStream) {
+        const eventType = event.event;
+        if (eventType === "on_chain_start") {
+          // Was assigned when creating the agent with `.withConfig({"runName": "Agent"})` above
+          if (event.name === "Agent") {
+            console.log("\n-----");
+            console.log(
+              `Starting agent: ${event.name} with input: ${JSON.stringify(
+                event.data.input
+              )}`
+            );
+          }
+        } else if (eventType === "on_chain_end") {
+          // Was assigned when creating the agent with `.withConfig({"runName": "Agent"})` above
+          if (event.name === "Agent") {
+            console.log("\n-----");
+            console.log(`Finished agent: ${event.name}\n`);
+            response = event.data.output;
+            console.log(`Agent output was: ${response}`);
+            console.log("\n-----");
+          }
+        } else if (eventType === "on_llm_stream") {
+          const content = event.data?.chunk?.message?.content;
+          // Empty content in the context of OpenAI means
+          // that the model is asking for a tool to be invoked via function call.
+          // So we only print non-empty content
+          if (content !== undefined && content !== "") {
+            console.log(`| ${content}`);
+          }
+        } else if (eventType === "on_tool_start") {
+          console.log("\n-----");
+          console.log(
+            `Starting tool: ${event.name} with inputs: ${event.data.input}`
           );
+        } else if (eventType === "on_tool_end") {
+          console.log("\n-----");
+          console.log(`Finished tool: ${event.name}\n`);
+          console.log(`Tool output was: ${event.data.output}`);
+          console.log("\n-----");
         }
       }
+
+      ws.send(
+              JSON.stringify({
+                type: "AI_RESPONSE",
+                uuid: conversationUUID,
+                text: response,
+              }),
+            );
 
       connectionStates.set(connectionId, { continueStreaming: true });
       ws.send(
