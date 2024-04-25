@@ -922,8 +922,6 @@ function sendMessage() {
     return;
   }
 
-  updateHistory("user", userText, false, []);
-
   createUserMessage({
     role: "user",
     parts: userText,
@@ -950,6 +948,8 @@ function sendMessage() {
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(message));
   }
+
+  updateHistory("user", userText, false, []);
 
   inputField.value = "";
   resetTextarea();
