@@ -158,6 +158,37 @@ app.post("/generate-image", async (req, res) => {
   }
 });
 
+function getMimeType(url) {
+  const extension = url.split('?')[0].split('.').pop();
+  const mimeTypes = {
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'gif': 'image/gif',
+    'bmp': 'image/bmp',
+    'tiff': 'image/tiff',
+    'webp': 'image/webp'
+  };
+  return mimeTypes[extension.toLowerCase()] || 'application/octet-stream';
+}
+
+app.get("/image/*", async (req, res) => {
+  const imageUrl = decodeURIComponent(req.params[0]);
+
+  try {
+    const imageResponse = await axios.get(imageUrl, {
+      responseType: 'arraybuffer'
+    });
+
+    const contentType = getMimeType(imageUrl);
+    res.set('Content-Type', contentType);
+    res.send(Buffer.from(imageResponse.data));
+  } catch (error) {
+    console.error('Failed to retrieve the image:', error);
+    res.status(500).send("Failed to retrieve image");
+  }
+});
+
 async function generate_image(prompt) {
   const { Client } = await import("@gradio/client");
   global.EventSource = require("eventsource");
@@ -426,57 +457,7 @@ wss.on("connection", function connection(ws) {
 });
 
 async function generateImage(prompt, turbo = true, image = null) {
-  const headers = SDXLHeaders;
-  const invokeUrl = turbo ? SDXLTurboInvokeUrl : SDXLInvokeUrl;
-
-  const payload = turbo
-    ? {
-        text_prompts: [
-          {
-            text: prompt,
-            weight: 1,
-          },
-        ],
-        sampler: "K_EULER_ANCESTRAL",
-        steps: SDXLTurboSteps,
-        seed: Math.floor(Math.random() * 1000),
-      }
-    : {
-        text_prompts: [
-          {
-            text: prompt,
-            weight: 1,
-          },
-          {
-            text: "",
-            weight: -1,
-          },
-        ],
-        sampler: "K_DPM_2_ANCESTRAL",
-        steps: SDXLSteps,
-        cfg_scale: 5,
-        seed: Math.floor(Math.random() * 1000),
-      };
-
-  let response = await fetch(invokeUrl, {
-    method: "post",
-    body: JSON.stringify(payload),
-    headers: { "Content-Type": "application/json", ...headers },
-  });
-
-  let generation;
-  if (response.ok) {
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      generation = await response.json();
-    } else {
-      const text = await response.text();
-      generation = JSON.parse(text);
-    }
-  } else {
-    throw new Error("Failed to fetch image generation data");
-  }
-  return generation;
+  return null;
 }
 
 async function uploadImageToImgur(imageData) {
