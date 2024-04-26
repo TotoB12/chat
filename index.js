@@ -120,7 +120,7 @@ app.get("/image/*", async (req, res) => {
     res.set('Content-Type', contentType);
     res.send(Buffer.from(imageResponse.data));
   } catch (error) {
-    console.error('Failed to retrieve the image:', error);
+    console.error('Failed to retrieve the image:', error.message);
     res.status(500).send("Failed to retrieve image");
   }
 });
