@@ -351,6 +351,10 @@ body {
   border-radius: 7px;
 }
 
+.message a {
+  color: darkcyan;
+}
+
 #menuToggle {
     display: block;
     position: fixed;

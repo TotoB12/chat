@@ -1,31 +1,39 @@
-import { client } from "@gradio/client";
-import { createRequire } from 'node:module'
-const require = createRequire(import.meta.url);
-global.EventSource = require('eventsource');
+global.EventSource = require("eventsource");
+global.window = {
+  setTimeout: function (callback, time, smth) {
+    return global.setTimeout(callback, time, smth);
+  },
+  location: {
+    hostname: "chat.totob12.com",
+  },
+};
 
-async function generateImage(prompt) {
-  const app = await client("hysts/SDXL");
+async function generate_image(prompt) {
+  const { Client } = await import("@gradio/client");
+
+  const app = await Client.connect("https://hysts-SDXL.hf.space/run");
+  console.log(77);
   const result = await app.predict("/run", [
-    prompt, // string  in 'Prompt' Textbox component
-    "Hello!!", // string  in 'Negative prompt' Textbox component
-    "Hello!!", // string  in 'Prompt 2' Textbox component
-    "Hello!!", // string  in 'Negative prompt 2' Textbox component
-    true, // boolean  in 'Use negative prompt' Checkbox component
-    true, // boolean  in 'Use prompt 2' Checkbox component
-    true, // boolean  in 'Use negative prompt 2' Checkbox component
-    0, // number (numeric value between 0 and 2147483647) in 'Seed' Slider component
-    256, // number (numeric value between 256 and 1024) in 'Width' Slider component
-    256, // number (numeric value between 256 and 1024) in 'Height' Slider component
-    1, // number (numeric value between 1 and 20) in 'Guidance scale for base' Slider component
-    1, // number (numeric value between 1 and 20) in 'Guidance scale for refiner' Slider component
-    10, // number (numeric value between 10 and 100) in 'Number of inference steps for base' Slider component
-    10, // number (numeric value between 10 and 100) in 'Number of inference steps for refiner' Slider component
-    true, // boolean  in 'Apply refiner' Checkbox component
+      prompt, // prompt
+      "Hello!!", // negative prompt
+      "Hello!!", // prompt 2
+      "Hello!!", // negative prompt 2
+      false, // negative prompt?
+      false, // prompt 2?
+      false, // negative prompt 2?
+      7, // seed
+      1024, // width
+      1024, // height
+      5, // base guidance scale
+      5, // refiner guidance scale
+      25, // base inference steps
+      25, // refiner inference steps
+      false, // refiner?
   ]);
-
-  return "https://hysts-sdxl.hf.space/file=" + result.data;
+  console.log(99)
+  console.log(result)
+  const url = result.data[0].url.toString();
+  return { url: url };
 }
 
-generateImage(
-  "a woman at the beach, bikini, large breasts, pregnant woman, oil paiting",
-);
+generate_image("a cute dog");
