@@ -276,8 +276,13 @@ wss.on("connection", function connection(ws) {
           apiKey: cohere_api_key,
         });
 
-        console.log('Cohere "recommends" doing the following tool calls:');
+        console.log('Cohere initial response:');
         console.log(initial_response);
+        console.log('Cohere "recommends" doing the following tool calls:');
+        for (const tool_call of initial_response.toolCalls) {
+          console.log(tool_call);
+      }
+        // console.log(initial_response.toolCalls)
         let response;
 
         if (Array.isArray(initial_response.toolCalls)) {

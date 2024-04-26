@@ -1,9 +1,7 @@
-const DEFAULT_MODEL_PREFERENCE = "Fast";
 const chatBox = document.getElementById("chat-box");
 const inputField = document.getElementById("chat-input");
 const sendButton = document.getElementById("send-button");
 const modelToggle = document.getElementById("modelToggle");
-const modelPreference = localStorage.getItem("modelPreference") || "Fast";
 const newChatButton = document.getElementById("newChatButton");
 const deleteAllButton = document.getElementById("deleteAllButton");
 const settingsButton = document.getElementById("settingsButton");
@@ -166,22 +164,12 @@ function loadHistory() {
       chatBox.appendChild(label);
 
       let input = entry.parts;
-      const match = input.match(/\{"generateImage": "(.+?)"\}/);
-      if (match) {
-        input = input.replace(match[0], "");
-      }
 
       if (input.trim() !== "") {
         const div = document.createElement("div");
         div.className = "message ai-message";
         div.innerHTML = marked.parse(input);
         chatBox.appendChild(div);
-      }
-
-      if (entry.images && entry.images.length) {
-        entry.images.forEach((image) => {
-          displayImage(image.link);
-        });
       }
     } else if (entry.role === "system") {
       // system messages
@@ -218,13 +206,7 @@ function updateCharacterCount() {
   }
 }
 
-function updateHistory(
-  role,
-  parts,
-  updateLast = false,
-  images = [],
-  error = false,
-) {
+function updateHistory(role, parts, updateLast = false, error = false) {
   let history = getHistory();
   const timestamp = new Date().getTime();
 
@@ -237,9 +219,6 @@ function updateHistory(
     if (error) {
       history[history.length - 1].error = true;
     }
-    if (images.length) {
-      history[history.length - 1].images = images;
-    }
     history[history.length - 1].timestamp = timestamp;
   } else {
     const newEntry = {
@@ -247,7 +226,6 @@ function updateHistory(
       parts: parts,
       error: error,
       id: generateElementId(),
-      images: images,
       timestamp: timestamp,
     };
     history.push(newEntry);
@@ -316,8 +294,8 @@ function updateMenuWithConversations() {
 
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key.startsWith('timestamp_')) {
-      const uuid = key.replace('timestamp_', '');
+    if (key.startsWith("timestamp_")) {
+      const uuid = key.replace("timestamp_", "");
       const timestamp = parseInt(localStorage.getItem(key), 10);
       if (!isNaN(timestamp)) {
         conversations.push({ uuid, timestamp });
@@ -330,7 +308,8 @@ function updateMenuWithConversations() {
   if (conversations.length === 0) {
     const noConversationsMessage = document.createElement("div");
     noConversationsMessage.className = "no-conversations-message";
-    noConversationsMessage.innerHTML = "<p>No conversations available</p><p>Start chatting now!</p>";
+    noConversationsMessage.innerHTML =
+      "<p>No conversations available</p><p>Start chatting now!</p>";
     menu.appendChild(noConversationsMessage);
     deleteAllButton.classList.add("disabled");
   } else {
@@ -341,22 +320,35 @@ function updateMenuWithConversations() {
 
     const categories = [
       { label: "Today", start: today.getTime(), conversations: [] },
-      { label: "Yesterday", start: yesterday, end: today.getTime(), conversations: [] },
-      { label: "Previous 7 Days", start: sevenDaysAgo, end: yesterday, conversations: [] },
+      {
+        label: "Yesterday",
+        start: yesterday,
+        end: today.getTime(),
+        conversations: [],
+      },
+      {
+        label: "Previous 7 Days",
+        start: sevenDaysAgo,
+        end: yesterday,
+        conversations: [],
+      },
       { label: "Older", end: sevenDaysAgo, conversations: [] },
     ];
 
     conversations.forEach(({ uuid, timestamp }) => {
       const conversationDate = new Date(timestamp);
-      const category = categories.find(cat => {
-        return (!cat.start || conversationDate >= cat.start) && (!cat.end || conversationDate < cat.end);
+      const category = categories.find((cat) => {
+        return (
+          (!cat.start || conversationDate >= cat.start) &&
+          (!cat.end || conversationDate < cat.end)
+        );
       });
       if (category) {
         category.conversations.push({ uuid, timestamp });
       }
     });
 
-    categories.forEach(category => {
+    categories.forEach((category) => {
       if (category.conversations.length > 0) {
         const header = document.createElement("p");
         header.className = "conversation-header";
@@ -366,7 +358,8 @@ function updateMenuWithConversations() {
         category.conversations.forEach(({ uuid }) => {
           const conversationData = JSON.parse(localStorage.getItem(uuid));
           const title = conversationData[3]?.parts || "New Conversation";
-          const truncatedTitle = title.length > 100 ? title.substring(0, 100) + "..." : title;
+          const truncatedTitle =
+            title.length > 100 ? title.substring(0, 100) + "..." : title;
 
           const menuItem = document.createElement("li");
           menuItem.className = "conversation";
@@ -420,18 +413,18 @@ function deleteConversation(uuid) {
   conversationElement.classList.add("slide-away");
 
   setTimeout(() => {
-    const conversation = JSON.parse(localStorage.getItem(uuid));
-    if (conversation) {
-      conversation.forEach((entry) => {
-        if (entry.images) {
-          entry.images.forEach((image) => {
-            if (image.deletehash) {
-              deleteImageFromImgur(image.deletehash);
-            }
-          });
-        }
-      });
-    }
+    // const conversation = JSON.parse(localStorage.getItem(uuid));
+    // if (conversation) {
+    //   conversation.forEach((entry) => {
+    //     if (entry.images) {
+    //       entry.images.forEach((image) => {
+    //         if (image.deletehash) {
+    //           deleteImageFromImgur(image.deletehash);
+    //         }
+    //       });
+    //     }
+    //   });
+    // }
 
     localStorage.removeItem(uuid);
     localStorage.removeItem(`timestamp_${uuid}`);
@@ -475,18 +468,18 @@ function deleteAllConversations() {
 
     setTimeout(() => {
       keysToDelete.forEach((uuid) => {
-        const conversation = JSON.parse(localStorage.getItem(uuid));
-        if (conversation) {
-          conversation.forEach((entry) => {
-            if (entry.images) {
-              entry.images.forEach((image) => {
-                if (image.deletehash) {
-                  deleteImageFromImgur(image.deletehash);
-                }
-              });
-            }
-          });
-        }
+        // const conversation = JSON.parse(localStorage.getItem(uuid));
+        // if (conversation) {
+        //   conversation.forEach((entry) => {
+        //     if (entry.images) {
+        //       entry.images.forEach((image) => {
+        //         if (image.deletehash) {
+        //           deleteImageFromImgur(image.deletehash);
+        //         }
+        //       });
+        //     }
+        //   });
+        // }
         localStorage.removeItem(uuid);
         localStorage.removeItem(`timestamp_${uuid}`);
       });
@@ -710,27 +703,9 @@ function processAIResponse(message, isError = false) {
 
   latestAIMessageElement.fullMessage += message;
 
-  const imageCommandMatch = latestAIMessageElement.fullMessage.match(
-    /\{"generateImage": "(.+?)"\}/,
-  );
-
   let displayedMessage = latestAIMessageElement.fullMessage;
 
-  if (imageCommandMatch) {
-    displayedMessage = latestAIMessageElement.fullMessage.replace(
-      imageCommandMatch[0],
-      "",
-    );
-
-    if (!displayedMessage.trim()) {
-      latestAIMessageElement.parentNode.removeChild(latestAIMessageElement);
-    } else {
-      latestAIMessageElement.innerHTML = marked.parse(displayedMessage.trim());
-    }
-    addLoadingIndicator();
-
-    generateAndDisplayImage(imageCommandMatch[1]);
-  } else if (displayedMessage.trim() !== "") {
+  if (displayedMessage.trim() !== "") {
     latestAIMessageElement.innerHTML = marked.parse(displayedMessage.trim());
     wrapCodeElements();
   }
@@ -748,69 +723,6 @@ function processAIResponse(message, isError = false) {
   chatBox.scrollTop = chatBox.scrollHeight;
   updateChatBoxVisibility();
   // wrapCodeElements();
-}
-
-function addLoadingIndicator() {
-  const bubbleContainer = document.createElement("div");
-  bubbleContainer.className = "loading-bubble";
-
-  const loadingIndicator = document.createElement("div");
-  loadingIndicator.className = "image-loading";
-  loadingIndicator.textContent = "Generating image";
-  bubbleContainer.appendChild(loadingIndicator);
-  chatBox.appendChild(bubbleContainer);
-
-  let dots = 0;
-  const maxDots = 3;
-  const updateText = () => {
-    dots = (dots + 1) % (maxDots + 1);
-    loadingIndicator.textContent = "Generating image" + ".".repeat(dots);
-  };
-  const intervalId = setInterval(updateText, 500);
-
-  bubbleContainer.dataset.intervalId = intervalId.toString();
-}
-
-function removeLoadingIndicator() {
-  const bubbleContainer = document.querySelector(".loading-bubble");
-  if (bubbleContainer) {
-    const intervalId = parseInt(bubbleContainer.dataset.intervalId, 10);
-    clearInterval(intervalId);
-    bubbleContainer.remove();
-  }
-}
-
-function generateAndDisplayImage(prompt, image = null) {
-  const modelPreference =
-    localStorage.getItem("modelPreference") || DEFAULT_MODEL_PREFERENCE;
-  const turbo = modelPreference === "Fast";
-  fetch("/generate-image", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ prompt, turbo, image }),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data && data.imageData) {
-        removeLoadingIndicator();
-
-        const imageBlob = base64ToBlob(data.imageData);
-        const tempImageUrl = URL.createObjectURL(imageBlob);
-        const imageElement = displayImage(tempImageUrl, true);
-        uploadAIGeneratedImageToImgur(imageBlob, imageElement);
-      } else {
-        throw new Error("Image data not found");
-      }
-    })
-    .catch((error) => {
-      console.error("Error generating image:", error);
-      const loadingIndicator = document.querySelector(".image-loading");
-      if (loadingIndicator) {
-        loadingIndicator.textContent = "Failed to load image.";
-      }
-    });
 }
 
 function base64ToBlob(base64, mimeType = "image/jpeg") {
@@ -851,15 +763,7 @@ function uploadAIGeneratedImageToImgur(imageBlob, imageElementToUpdate) {
           "Before fetch, image element to update:",
           imageElementToUpdate.src,
         );
-        updateHistoryWithImage([data.data]);
-        // if (imageElementToUpdate) {
-        //   imageElementToUpdate.src = data.data.link;
-        //   console.log(
-        //     "Before fetch, image element to update:",
-        //     imageElementToUpdate.src,
-        //   );
-        // }
-        // updateHistoryWithImage(data.data);
+        console.log([data.data]);
       } else {
         throw new Error("Failed to upload image to Imgur");
       }
@@ -867,23 +771,6 @@ function uploadAIGeneratedImageToImgur(imageBlob, imageElementToUpdate) {
     .catch((error) => {
       console.error("Error uploading AI-generated image to Imgur:", error);
     });
-}
-
-function updateHistoryWithImage(imageInfo) {
-  let newImages = Array.isArray(imageInfo) ? imageInfo : [imageInfo];
-
-  let history = getHistory();
-  if (history.length > 0) {
-    let lastEntry = history[history.length - 1];
-
-    if (!lastEntry.images) {
-      lastEntry.images = [];
-    }
-
-    lastEntry.images = lastEntry.images.concat(newImages);
-
-    localStorage.setItem(currentConversationUUID, JSON.stringify(history));
-  }
 }
 
 function stopAIResponse(uuid) {
@@ -915,7 +802,7 @@ function sendMessage() {
     setTimeout(() => sendButton.classList.remove("shake"), 120);
     return;
   }
-  if (userText === "" && !uploadedImage) {
+  if (userText === "") {
     displayNotification("Please enter a message.", "error");
     sendButton.classList.add("shake");
     setTimeout(() => sendButton.classList.remove("shake"), 120);
@@ -959,42 +846,6 @@ function sendMessage() {
   wrapCodeElements();
   updateMenuWithConversations();
 }
-
-function displayImage(imageUrl, blobUrl = false) {
-  let smallThumbnailUrl = imageUrl;
-  let largeThumbnailUrl = imageUrl;
-
-  if (blobUrl == false) {
-    smallThumbnailUrl = smallThumbnailUrl.replace(/(\.[\w\d_-]+)$/i, "t$1");
-    largeThumbnailUrl = largeThumbnailUrl.replace(/(\.[\w\d_-]+)$/i, "l$1");
-  }
-
-  const imageElement = document.createElement("img");
-  imageElement.src = smallThumbnailUrl;
-  imageElement.className = "uploaded-image";
-
-  imageElement.onload = () => {
-    imageElement.src = largeThumbnailUrl;
-  };
-
-  imageElement.addEventListener("click", () => {
-    const modal = document.getElementById("image-modal");
-    const fullImage = document.getElementById("fullscreen-image");
-    fullImage.src = imageUrl;
-    modal.classList.add("show-modal");
-  });
-
-  chatBox.appendChild(imageElement);
-  return imageElement;
-}
-
-document.getElementById("image-modal").addEventListener("click", function (e) {
-  if (e.target !== this) {
-    return;
-  }
-  this.classList.remove("show-modal");
-  inputField.focus();
-});
 
 function handleEnterKeyPress(event) {
   if (event.key === "Enter" && !event.shiftKey) {
@@ -1163,20 +1014,6 @@ document.addEventListener("DOMContentLoaded", function () {
     useSimulatedMouse = true;
   });
 
-  const modelPreference =
-    localStorage.getItem("modelPreference") || DEFAULT_MODEL_PREFERENCE;
-  localStorage.setItem("modelPreference", modelPreference);
-  const modelToggle = document.getElementById("modelToggle");
-  modelToggle.checked = modelPreference === "Best";
-
-  // modelToggle.disabled = true;
-  // modelToggle.title = "Fast model currently unavailable";
-
-  modelToggle.addEventListener("change", function () {
-    const modelPreference = modelToggle.checked ? "Best" : "Fast";
-    localStorage.setItem("modelPreference", modelPreference);
-  });
-
   settingsButton.onclick = function () {
     settingsModal.style.display = "block";
   };
@@ -1304,10 +1141,6 @@ function fetchImageFromUrl(url) {
   });
 }
 
-function handleFiles(files) {
-  [...files].forEach(upload);
-}
-
 for (let i = 0; i < anim_params.pointsNumber; i++) {
   anim_trail[i] = {
     x: anim_canvas.width / 2,
@@ -1421,7 +1254,6 @@ function update_anim(t) {
 // }
 
 function wrapCodeElements() {
-  // console.log('haaaaaaaaa');
   hljs.highlightAll();
   const codeElements = document.querySelectorAll("code");
   codeElements.forEach((codeElement) => {
