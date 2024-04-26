@@ -612,7 +612,7 @@ function startWebSocket() {
         data.uuid === currentConversationUUID
       ) {
         // console.log("UUID:", data.uuid);
-        processAIResponse(data.text);
+        processAIResponse(data);
         // wrapCodeElements();
       }
 
@@ -622,7 +622,7 @@ function startWebSocket() {
       }
 
       if (data.type === "error" && data.uuid === currentConversationUUID) {
-        processAIResponse(data.text, true);
+        processAIResponse(data, true);
       }
 
       if (data.type === "AI_COMPLETE" && data.uniqueIdentifier === "7777") {
@@ -687,7 +687,7 @@ function updatePingDisplay(latency) {
   pingStatusElement.innerHTML = `Ping: ${latency} ms`;
 }
 
-function processAIResponse(message, isError = false) {
+function processAIResponse(data, isError = false) {
   if (!latestAIMessageElement) {
     latestAIMessageElement = document.createElement("div");
     latestAIMessageElement.className = isError
@@ -701,7 +701,8 @@ function processAIResponse(message, isError = false) {
     latestAIMessageElement.fullMessage = "";
   }
 
-  latestAIMessageElement.fullMessage += message;
+  if (data.text) {
+    latestAIMessageElement.fullMessage += data.text;
 
   let displayedMessage = latestAIMessageElement.fullMessage;
 
@@ -718,6 +719,11 @@ function processAIResponse(message, isError = false) {
       null,
       isError,
     );
+  }
+  } else if (data.tool) {
+    const toolName = data.tool.name;
+    const toolParameters = JSON.stringify(data.tool.parameters);
+    latestAIMessageElement.innerHTML += `using '${toolName}' with ${toolParameters}`;
   }
 
   chatBox.scrollTop = chatBox.scrollHeight;

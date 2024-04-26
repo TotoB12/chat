@@ -75,10 +75,6 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.use((req, res, next) => {
-  res.redirect("/aaaa");
-});
-
 app.get("/c/:uuid", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
@@ -127,6 +123,10 @@ app.get("/image/*", async (req, res) => {
     console.error('Failed to retrieve the image:', error);
     res.status(500).send("Failed to retrieve image");
   }
+});
+
+app.use((req, res, next) => {
+  res.redirect("/aaaa");
 });
 
 async function generate_image(prompt) {
@@ -278,14 +278,22 @@ wss.on("connection", function connection(ws) {
 
         console.log('Cohere initial response:');
         console.log(initial_response);
-        console.log('Cohere "recommends" doing the following tool calls:');
-        for (const tool_call of initial_response.toolCalls) {
-          console.log(tool_call);
-      }
         // console.log(initial_response.toolCalls)
         let response;
 
         if (Array.isArray(initial_response.toolCalls)) {
+          console.log('Cohere "recommends" doing the following tool calls:');
+          for (const tool_call of initial_response.toolCalls) {
+            console.log(tool_call);
+            ws.send(
+              JSON.stringify({
+                type: "AI_RESPONSE",
+                uuid: conversationUUID,
+                tool: tool_call,
+              }),
+            );
+          }
+          
           if (initial_response.text != "") {
             console.log(initial_response.text);
           }
