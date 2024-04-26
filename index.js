@@ -1,4 +1,3 @@
-require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const http = require("http");
@@ -15,6 +14,28 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const cohere = new CohereClient();
+
+let cohere_api_key = process.env["CO_API_KEY"];
+let currentApiKeyIndex = 0;
+let apiKeys = [process.env["CO_API_KEY"], process.env["CO_API_KEY0"], process.env["CO_API_KEY2"]];
+
+async function switchCohere() {
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+  currentApiKeyIndex = (currentApiKeyIndex + 1) % apiKeys.length;
+  cohere_api_key = apiKeys[currentApiKeyIndex];
+  await sleep(2000);
+  console.log(cohere_api_key)
+}
+
+global.EventSource = require("eventsource");
+global.window = {
+  setTimeout: function (callback, time, smth) {
+    return global.setTimeout(callback, time, smth);
+  },
+  location: {
+    hostname: "chat.totob12.com",
+  },
+};
 
 const system_prompt = `**TotoB12 System Directive**
 
@@ -111,7 +132,9 @@ app.post("/api", async (req, res) => {
     // // console.log(response);
     // res.json({ response });
 
-    res.json({ response: "This serice is in development, please stop using it." });
+    res.json({
+      response: "This serice is in development, please stop using it.",
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error processing your request" });
@@ -135,13 +158,38 @@ app.post("/generate-image", async (req, res) => {
   }
 });
 
-async function generate_image(input) {
-  return { url: "https://i.imgur.com/6uUllWu.jpeg" };
+async function generate_image(prompt) {
+  const { Client } = await import("@gradio/client");
+  global.EventSource = require("eventsource");
+
+  const app = await Client.connect("https://hysts-SDXL.hf.space/run");
+  console.log(77);
+  const result = await app.predict("/run", [
+      prompt, // prompt
+      "Hello!!", // negative prompt
+      "Hello!!", // prompt 2
+      "Hello!!", // negative prompt 2
+      false, // negative prompt?
+      false, // prompt 2?
+      false, // negative prompt 2?
+      Math.floor(Math.random() * 99999999999999), // seed
+      1024, // width
+      1024, // height
+      5, // base guidance scale
+      5, // refiner guidance scale
+      25, // base inference steps
+      25, // refiner inference steps
+      true, // refiner?
+  ]);
+  console.log(99)
+  console.log(result)
+  const url = result.data[0].url.toString();
+  return { url: url };
 }
 
 async function search_web(input) {
   const query = input.query;
-  console.log(query)
+  console.log(query);
   const endpoint = "https://api.tavily.com/search";
   const body = {
     api_key: "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",
@@ -186,7 +234,8 @@ const tools = [
   // },
   {
     name: "search_web",
-    description: "Search the web for a given query, returns web results and images",
+    description:
+      "Search the web for a given query, returns web results and images",
     parameter_definitions: {
       query: {
         description: "The query to search for",
@@ -208,153 +257,168 @@ wss.on("connection", function connection(ws) {
   ws.on("message", async function incoming(messageBuffer) {
     const messageData = JSON.parse(messageBuffer.toString());
     const conversationUUID = messageData.uuid;
-    try {
-      if (messageData.type === "stop_ai_response") {
-        console.log("Stopping AI response for connection:", connectionId);
-        connectionStates.set(connectionId, { continueStreaming: false });
-        return;
-      }
 
-      if (messageData.type === "ping") {
-        ws.send(JSON.stringify({ type: "pong" }));
-        return;
-      }
-
-      // console.log(messageData);
-
-      function composeHistory(history) {
-        const data = history.map(entry => {
-          let role;
-          switch (entry.role) {
-            case 'user':
-              role = 'USER';
-              break;
-            case 'model':
-              role = 'CHATBOT';
-              break;
-            case 'system':
-              role = 'SYSTEM';
-              break;
-            default:
-              return null;
-          }
-          return { role, message: entry.parts };
-        }).filter(entry => entry !== null);
-
-        return data;
-      }
-
-      const chatHistory = composeHistory(messageData.history);
-
-      // console.log(chatHistory);
-
-      const message = messageData.text;
-
-      const initial_response = await cohere.chat({
-        model: "command-r",
-        tools: tools,
-        temperature: 0.7,
-        preamble: preamble,
-        message: message,
-        chatHistory: chatHistory,
-      });
-
-      console.log("Cohere \"recommends\" doing the following tool calls:");
-      console.log(initial_response);
-      let response;
-
-      if (Array.isArray(initial_response.toolCalls)) {
-        if (initial_response.text != "") {
-          console.log(initial_response.text);
-        }
-        const tool_results = [];
-
-        for (const tool of initial_response.toolCalls) {
-          const output = await mapping[tool.name](tool.parameters);
-          const outputs = [output];
-          tool_results.push({
-            call: tool,
-            outputs: outputs,
-          });
+    async function processMessage() {
+      try {
+        if (messageData.type === "stop_ai_response") {
+          console.log("Stopping AI response for connection:", connectionId);
+          connectionStates.set(connectionId, { continueStreaming: false });
+          return;
         }
 
-        console.log("Tool results to be fed back:");
-        console.log(tool_results);
+        if (messageData.type === "ping") {
+          ws.send(JSON.stringify({ type: "pong" }));
+          return;
+        }
 
-        response = await cohere.chatStream({
+        // console.log(messageData);
+
+        function composeHistory(history) {
+          const data = history
+            .map((entry) => {
+              let role;
+              switch (entry.role) {
+                case "user":
+                  role = "USER";
+                  break;
+                case "model":
+                  role = "CHATBOT";
+                  break;
+                case "system":
+                  role = "SYSTEM";
+                  break;
+                default:
+                  return null;
+              }
+              return { role, message: entry.parts };
+            })
+            .filter((entry) => entry !== null);
+
+          return data;
+        }
+
+        const chatHistory = composeHistory(messageData.history);
+
+        // console.log(chatHistory);
+
+        const message = messageData.text;
+
+        const initial_response = await cohere.chat({
           model: "command-r",
           tools: tools,
-          tool_results: tool_results,
-          temperature: 0.2,
+          temperature: 0.7,
           preamble: preamble,
           message: message,
           chatHistory: chatHistory,
+          apiKey: cohere_api_key,
         });
 
-        for await (const message of response) {
-          if (message.eventType === 'text-generation') {
-            // console.log(message);
-            ws.send(
-              JSON.stringify({
-                type: "AI_RESPONSE",
-                uuid: conversationUUID,
-                text: message.text,
-              }),
-            );
+        console.log('Cohere "recommends" doing the following tool calls:');
+        console.log(initial_response);
+        let response;
+
+        if (Array.isArray(initial_response.toolCalls)) {
+          if (initial_response.text != "") {
+            console.log(initial_response.text);
           }
+          const tool_results = [];
+
+          for (const tool of initial_response.toolCalls) {
+            const output = await mapping[tool.name](tool.parameters);
+            const outputs = [output];
+            tool_results.push({
+              call: tool,
+              outputs: outputs,
+            });
+          }
+
+          console.log("Tool results to be fed back:");
+          console.log(tool_results);
+
+          response = await cohere.chatStream({
+            model: "command-r",
+            tools: tools,
+            tool_results: tool_results,
+            temperature: 0.2,
+            preamble: preamble,
+            message: message,
+            chatHistory: chatHistory,
+            apiKey: cohere_api_key,
+          });
+
+          for await (const message of response) {
+            if (message.eventType === "text-generation") {
+              // console.log(message);
+              ws.send(
+                JSON.stringify({
+                  type: "AI_RESPONSE",
+                  uuid: conversationUUID,
+                  text: message.text,
+                }),
+              );
+            }
+          }
+        } else {
+          response = initial_response.text;
+          ws.send(
+            JSON.stringify({
+              type: "AI_RESPONSE",
+              uuid: conversationUUID,
+              text: response,
+            }),
+          );
         }
-      } else {
-        response = initial_response.text;
+
+        // ws.send(
+        //         JSON.stringify({
+        //           type: "AI_RESPONSE",
+        //           uuid: conversationUUID,
+        //           text: response,
+        //         }),
+        //       );
+
+        connectionStates.set(connectionId, { continueStreaming: true });
         ws.send(
           JSON.stringify({
-            type: "AI_RESPONSE",
+            type: "AI_COMPLETE",
             uuid: conversationUUID,
-            text: response,
+            uniqueIdentifier: "7777",
+          }),
+        );
+      } catch (error) {
+        console.log(error)
+        if (error.statusCode === 429) {
+          console.log("Rate limit exceeded, switching API key and retrying...");
+          await switchCohere();
+          return processMessage();
+        }
+        // console.error(error);
+
+        let blockReason = "";
+        if (error.response && error.response.promptFeedback) {
+          blockReason = `Request was blocked due to ${error.response.promptFeedback.blockReason}.`;
+        } else {
+          blockReason = "Error: Unable to process the request.";
+        }
+
+        ws.send(
+          JSON.stringify({
+            type: "error",
+            uuid: conversationUUID,
+            text: blockReason,
+          }),
+        );
+        ws.send(
+          JSON.stringify({
+            type: "AI_COMPLETE",
+            uuid: conversationUUID,
+            uniqueIdentifier: "7777",
           }),
         );
       }
-
-      // ws.send(
-      //         JSON.stringify({
-      //           type: "AI_RESPONSE",
-      //           uuid: conversationUUID,
-      //           text: response,
-      //         }),
-      //       );
-
-      connectionStates.set(connectionId, { continueStreaming: true });
-      ws.send(
-        JSON.stringify({
-          type: "AI_COMPLETE",
-          uuid: conversationUUID,
-          uniqueIdentifier: "7777",
-        }),
-      );
-    } catch (error) {
-      console.error(error);
-
-      let blockReason = "";
-      if (error.response && error.response.promptFeedback) {
-        blockReason = `Request was blocked due to ${error.response.promptFeedback.blockReason}.`;
-      } else {
-        blockReason = "Error: Unable to process the request.";
-      }
-
-      ws.send(
-        JSON.stringify({
-          type: "error",
-          uuid: conversationUUID,
-          text: blockReason,
-        }),
-      );
-      ws.send(
-        JSON.stringify({
-          type: "AI_COMPLETE",
-          uuid: conversationUUID,
-          uniqueIdentifier: "7777",
-        }),
-      );
     }
+
+    processMessage();
   });
   ws.on("close", () => {
     connectionStates.delete(connectionId);
