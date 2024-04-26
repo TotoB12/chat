@@ -126,7 +126,7 @@ app.get("/image/*", async (req, res) => {
 });
 
 app.use((req, res, next) => {
-  res.redirect("/aaaa");
+  res.sendFile(path.join(__dirname, "public", "404.html"));
 });
 
 async function generate_image(prompt) {

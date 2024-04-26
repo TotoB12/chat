@@ -687,6 +687,14 @@ function updatePingDisplay(latency) {
   pingStatusElement.innerHTML = `Ping: ${latency} ms`;
 }
 
+function processAIMessage(message) {
+  const imageUrlRegex = /!\[([^\]]*)\]\((.*?)\)/g;
+  return message.replace(imageUrlRegex, (match, altText, url) => {
+    const newUrl = `/image/${encodeURIComponent(url)}`;
+    return `![${altText}](${newUrl})`;
+  });
+}
+
 function processAIResponse(data, isError = false) {
   if (!latestAIMessageElement) {
     latestAIMessageElement = document.createElement("div");
@@ -704,22 +712,22 @@ function processAIResponse(data, isError = false) {
   if (data.text) {
     latestAIMessageElement.fullMessage += data.text;
 
-  let displayedMessage = latestAIMessageElement.fullMessage;
+    let displayedMessage = latestAIMessageElement.fullMessage;
 
-  if (displayedMessage.trim() !== "") {
-    latestAIMessageElement.innerHTML = marked.parse(displayedMessage.trim());
-    wrapCodeElements();
-  }
+    if (displayedMessage.trim() !== "") {
+      latestAIMessageElement.innerHTML = marked.parse(processAIMessage(displayedMessage.trim()));
+      wrapCodeElements();
+    }
 
-  if (latestAIMessageElement.fullMessage.trim() !== "") {
-    updateHistory(
-      "model",
-      latestAIMessageElement.fullMessage.trim(),
-      true,
-      null,
-      isError,
-    );
-  }
+    if (latestAIMessageElement.fullMessage.trim() !== "") {
+      updateHistory(
+        "model",
+        latestAIMessageElement.fullMessage.trim(),
+        true,
+        null,
+        isError,
+      );
+    }
   } else if (data.tool) {
     const toolName = data.tool.name;
     const toolParameters = JSON.stringify(data.tool.parameters);
