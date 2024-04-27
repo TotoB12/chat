@@ -234,6 +234,8 @@ function updateHistory(role, parts, updateLast = false, error = false) {
     currentConversationUUID = generateUUID();
     console.log("haaaaaaaaaaaa");
     window.history.pushState(null, null, `/c/${currentConversationUUID}`);
+  } else {
+    window.history.pushState(null, null, `/c/${currentConversationUUID}`);
   }
 
   if (isNewConversation) {
@@ -713,8 +715,8 @@ document.addEventListener('DOMContentLoaded', function() {
 function processAIMessage(message) {
   const imageUrlRegex = /!\[([^\]]*)\]\((.*?)\)/g;
   return message.replace(imageUrlRegex, (match, altText, url) => {
-    // const newUrl = `/image/${encodeURIComponent(url)}`;
-    const newUrl = `https://chat.totob12.com/image/${url.replace("\'", "")}`;
+    const newUrl = `https://chat.totob12.com/image/${encodeURIComponent(url.replace("\'", "")).replace("%27" , "")}`;
+    // const newUrl = `https://chat.totob12.com/image/${url.replace("\'", "").replace("%27" , "")}`;
     return `![${altText}](${newUrl})`;
   });
 }
@@ -824,7 +826,7 @@ function stopAIResponse(uuid) {
   }
 }
 
-function sendMessage() {
+async function sendMessage() {
   const userText = inputField.value.trim();
 
   if (userText.length > charLimit) {
@@ -863,11 +865,22 @@ function sendMessage() {
     isNewConversation = false;
   }
 
+  let ipDetails = null;
+  try {
+    const ipResponse = await fetch("https://api.ipapi.is/");
+    ipDetails = await ipResponse.json();
+  } catch (error) {
+    console.error("Error fetching IP details:", error);
+  }
+
+  console.log(ipDetails);
+
   const message = {
     type: "user-message",
     uuid: currentConversationUUID,
     history: getHistory(),
     text: userText,
+    ipDetails: ipDetails,
   };
 
   if (ws && ws.readyState === WebSocket.OPEN) {

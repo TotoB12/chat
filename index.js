@@ -17,14 +17,18 @@ const cohere = new CohereClient();
 
 let cohere_api_key = process.env["CO_API_KEY"];
 let currentApiKeyIndex = 0;
-let apiKeys = [process.env["CO_API_KEY"], process.env["CO_API_KEY0"], process.env["CO_API_KEY2"]];
+let apiKeys = [
+  process.env["CO_API_KEY"],
+  process.env["CO_API_KEY0"],
+  process.env["CO_API_KEY2"],
+];
 
 async function switchCohere() {
-  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   currentApiKeyIndex = (currentApiKeyIndex + 1) % apiKeys.length;
   cohere_api_key = apiKeys[currentApiKeyIndex];
   await sleep(2000);
-  console.log(cohere_api_key)
+  console.log(cohere_api_key);
 }
 
 global.EventSource = require("eventsource");
@@ -99,17 +103,18 @@ app.get("/image/*", async (req, res) => {
 
   try {
     const imageResponse = await axios.get(imageUrl, {
-      responseType: 'stream',
+      responseType: "stream",
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'
-      }
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
+      },
     });
 
-    res.set('Content-Type', imageResponse.headers['content-type']);
+    res.set("Content-Type", imageResponse.headers["content-type"]);
 
     imageResponse.data.pipe(res);
   } catch (error) {
-    console.error('Failed to retrieve the image:', error);
+    console.error("Failed to retrieve the image:", error);
     res.status(500).send("Failed to retrieve image");
   }
 });
@@ -123,21 +128,21 @@ async function generate_image(input) {
 
   const app = await Client.connect("https://hysts-SDXL.hf.space/run");
   const result = await app.predict("/run", [
-      input.prompt, // prompt
-      "Hello!!", // negative prompt
-      "Hello!!", // prompt 2
-      "Hello!!", // negative prompt 2
-      false, // negative prompt?
-      false, // prompt 2?
-      false, // negative prompt 2?
-      Math.floor(Math.random() * 99999999999999), // seed
-      1024, // width
-      1024, // height
-      5, // base guidance scale
-      5, // refiner guidance scale
-      25, // base inference steps
-      25, // refiner inference steps
-      false, // refiner?
+    input.prompt, // prompt
+    "Hello!!", // negative prompt
+    "Hello!!", // prompt 2
+    "Hello!!", // negative prompt 2
+    false, // negative prompt?
+    false, // prompt 2?
+    false, // negative prompt 2?
+    Math.floor(Math.random() * 99999999999999), // seed
+    1024, // width
+    1024, // height
+    5, // base guidance scale
+    5, // refiner guidance scale
+    25, // base inference steps
+    25, // refiner inference steps
+    false, // refiner?
   ]);
   // console.log(result)
   return { url: result.data[0].url };
@@ -173,21 +178,21 @@ async function search_web(input) {
 
 async function get_weather(input) {
   try {
-    const geocodingUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${input.location}&limit=1&appid=${process.env['OPENWEATHER_API_KEY']}`;
+    const geocodingUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${input.location}&limit=1&appid=${process.env["OPENWEATHER_API_KEY"]}`;
     console.log(geocodingUrl);
     const geocode = await axios.get(geocodingUrl);
 
     const { lat, lon } = geocode.data[0];
     console.log(lat, lon);
 
-    const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${process.env['OPENWEATHER_API_KEY']}`;
+    const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${process.env["OPENWEATHER_API_KEY"]}`;
     console.log(weatherUrl);
     const weather = await axios.get(weatherUrl);
 
     const weatherData = JSON.stringify(weather.data);
     // console.log(weatherData)
 
-    return {weather: weatherData };
+    return { weather: weatherData };
   } catch (error) {
     console.error(error);
     return { weather: null };
@@ -203,7 +208,8 @@ const mapping = {
 const tools = [
   {
     name: "generate_image",
-    description: "Generate an image using AI based of a prompt, returns an image URL",
+    description:
+      "Generate an image using AI based of a prompt, returns an image URL",
     parameter_definitions: {
       prompt: {
         description: "The prompt to generate the image from",
@@ -234,7 +240,7 @@ const tools = [
         required: true,
       },
     },
-  }
+  },
 ];
 
 wss.on("connection", function connection(ws) {
@@ -289,18 +295,28 @@ wss.on("connection", function connection(ws) {
         // console.log(chatHistory);
 
         const message = messageData.text;
+        let fullPreamble = preamble;
+        if (messageData.ipDetails) {
+          const userLocation = `${messageData.ipDetails.location.city}, ${messageData.ipDetails.location.state}, ${messageData.ipDetails.location.country}`;
+          const userTimezone = messageData.ipDetails.location.timezone;
+          const userTime = messageData.ipDetails.location.local_time;
+          fullPreamble = `${preamble}
+
+## User Information
+The user is located in ${userLocation}. They are in the timezone of ${userTimezone} and their local time is ${userTime}.`;
+        }
 
         const initial_response = await cohere.chat({
           model: "command-r",
           tools: tools,
           temperature: 0.7,
-          preamble: preamble,
+          preamble: fullPreamble,
           message: message,
           chatHistory: chatHistory,
           apiKey: cohere_api_key,
         });
 
-        console.log('Cohere initial response:');
+        console.log("Cohere initial response:");
         console.log(initial_response);
         // console.log(initial_response.toolCalls)
         let response;
@@ -317,7 +333,7 @@ wss.on("connection", function connection(ws) {
               }),
             );
           }
-          
+
           if (initial_response.text != "") {
             console.log(initial_response.text);
           }
@@ -340,7 +356,7 @@ wss.on("connection", function connection(ws) {
             tools: tools,
             tool_results: tool_results,
             temperature: 0.2,
-            preamble: preamble,
+            preamble: fullPreamble,
             message: message,
             chatHistory: chatHistory,
             apiKey: cohere_api_key,
@@ -386,7 +402,7 @@ wss.on("connection", function connection(ws) {
           }),
         );
       } catch (error) {
-        console.log(error)
+        console.log(error);
         if (error.statusCode === 429) {
           console.log("Rate limit exceeded, switching API key and retrying...");
           await switchCohere();
