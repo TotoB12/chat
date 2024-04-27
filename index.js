@@ -129,12 +129,12 @@ app.use((req, res, next) => {
   res.sendFile(path.join(__dirname, "public", "404.html"));
 });
 
-async function generate_image(prompt) {
+async function generate_image(input) {
   const { Client } = await import("@gradio/client");
 
   const app = await Client.connect("https://hysts-SDXL.hf.space/run");
   const result = await app.predict("/run", [
-      prompt, // prompt
+      input.prompt, // prompt
       "Hello!!", // negative prompt
       "Hello!!", // prompt 2
       "Hello!!", // negative prompt 2
@@ -182,9 +182,33 @@ async function search_web(input) {
   }
 }
 
+async function get_weather(input) {
+  try {
+    const geocodingUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${input.location}&limit=1&appid=${process.env['OPENWEATHER_API_KEY']}`;
+    console.log(geocodingUrl);
+    const geocode = await axios.get(geocodingUrl);
+
+    const { lat, lon } = geocode.data[0];
+    console.log(lat, lon);
+
+    const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${process.env['OPENWEATHER_API_KEY']}`;
+    console.log(weatherUrl);
+    const weather = await axios.get(weatherUrl);
+
+    const weatherData = JSON.stringify(weather.data);
+    // console.log(weatherData)
+
+    return {weather: weatherData };
+  } catch (error) {
+    console.error(error);
+    return { weather: null };
+  }
+}
+
 const mapping = {
   generate_image: generate_image,
   search_web: search_web,
+  get_weather: get_weather,
 };
 
 const tools = [
@@ -211,6 +235,17 @@ const tools = [
       },
     },
   },
+  {
+    name: "get_weather",
+    description: "Get the weather for a given location",
+    parameter_definitions: {
+      location: {
+        description: "The location to get the weather for",
+        type: "string",
+        required: true,
+      },
+    },
+  }
 ];
 
 wss.on("connection", function connection(ws) {

@@ -1,39 +1,24 @@
-global.EventSource = require("eventsource");
-global.window = {
-  setTimeout: function (callback, time, smth) {
-    return global.setTimeout(callback, time, smth);
-  },
-  location: {
-    hostname: "chat.totob12.com",
-  },
-};
+const { get } = require("axios");
 
-async function generate_image(prompt) {
-  const { Client } = await import("@gradio/client");
+async function get_weather(input) {
+  try {
+    const geocodingUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${input}&limit=1&appid=${process.env['OPENWEATHER_API_KEY']}`;
+    const geocode = await get(geocodingUrl);
 
-  const app = await Client.connect("https://hysts-SDXL.hf.space/run");
-  console.log(77);
-  const result = await app.predict("/run", [
-      prompt, // prompt
-      "Hello!!", // negative prompt
-      "Hello!!", // prompt 2
-      "Hello!!", // negative prompt 2
-      false, // negative prompt?
-      false, // prompt 2?
-      false, // negative prompt 2?
-      7, // seed
-      1024, // width
-      1024, // height
-      5, // base guidance scale
-      5, // refiner guidance scale
-      25, // base inference steps
-      25, // refiner inference steps
-      false, // refiner?
-  ]);
-  console.log(99)
-  console.log(result)
-  const url = result.data[0].url.toString();
-  return { url: url };
+    const { lat, lon } = geocode.data[0];
+    // console.log(lat, lon);
+
+    const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${process.env['OPENWEATHER_API_KEY']}`;
+    const weather = await get(weatherUrl);
+
+    const weatherData = JSON.stringify(weather.data);
+    // console.log(weatherData)
+
+    return {weather: weatherData };
+  } catch (error) {
+    console.error(error);
+    return { weather: null };
+  }
 }
 
-generate_image("a cute dog");
+get_weather("paris");
