@@ -199,10 +199,23 @@ async function get_weather(input) {
   }
 }
 
+async function wolfram_alpha(input) {
+  try {
+    const url = `https://www.wolframalpha.com/api/v1/llm-api?input=${input.query}&appid=${process.env['WOLFRAMALPHA_API_KEY']}`;
+    const response = await axios.get(url);
+    const data = response.data;
+    return { results: data };
+  } catch (error) {
+    console.error(error);
+    return { weather: null };
+  }
+}
+
 const mapping = {
   generate_image: generate_image,
   search_web: search_web,
   get_weather: get_weather,
+  wolfram_alpha: wolfram_alpha,
 };
 
 const tools = [
@@ -236,6 +249,17 @@ const tools = [
     parameter_definitions: {
       location: {
         description: "The location to get the weather for",
+        type: "string",
+        required: true,
+      },
+    },
+  },
+  {
+    name: "wolfram_alpha",
+    description: "Ask Wolfram Alpha a question",
+    parameter_definitions: {
+      query: {
+        description: "The query to ask Wolfram Alpha",
         type: "string",
         required: true,
       },
