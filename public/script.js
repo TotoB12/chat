@@ -14,6 +14,7 @@ const menu = document.getElementById("menu");
 const conversationElements = document.querySelectorAll(".conversation");
 const transparentOverlay = document.getElementById("transparent-overlay");
 let buffer;
+const charLimit = 120000;
 let reconnectionAttempts = 0;
 const maxReconnectionAttempts = 5;
 let latestAIMessageElement = null;
@@ -168,7 +169,7 @@ function loadHistory() {
       if (input.trim() !== "") {
         const div = document.createElement("div");
         div.className = "message ai-message";
-        div.innerHTML = marked.parse(input);
+        div.innerHTML = marked.parse(processAIMessage(input));
         chatBox.appendChild(div);
       }
     } else if (entry.role === "system") {
@@ -181,8 +182,6 @@ function loadHistory() {
 
 function updateCharacterCount() {
   const charCount = inputField.value.length;
-
-  const charLimit = 60000;
 
   charCountElement.innerHTML = `${charCount
     .toLocaleString()
@@ -357,7 +356,7 @@ function updateMenuWithConversations() {
 
         category.conversations.forEach(({ uuid }) => {
           const conversationData = JSON.parse(localStorage.getItem(uuid));
-          const title = conversationData[3]?.parts || "New Conversation";
+          const title = conversationData[0]?.parts || "New Conversation";
           const truncatedTitle =
             title.length > 100 ? title.substring(0, 100) + "..." : title;
 
@@ -687,10 +686,35 @@ function updatePingDisplay(latency) {
   pingStatusElement.innerHTML = `Ping: ${latency} ms`;
 }
 
+document.addEventListener('DOMContentLoaded', function() {
+  const chatBox = document.getElementById('chat-box');
+  const modal = document.getElementById('image-modal');
+  const modalImg = document.getElementById('modal-image');
+  const closeModal = document.getElementsByClassName('close')[0];
+
+  chatBox.addEventListener('click', function(e) {
+    if (e.target.tagName === 'IMG' && e.target.closest('.message')) {
+      modal.style.display = "flex";
+      modalImg.src = e.target.src;
+    }
+  });
+
+  closeModal.onclick = function() {
+    modal.style.display = "none";
+  };
+
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      modal.style.display = "none";
+    }
+  });
+});
+
 function processAIMessage(message) {
   const imageUrlRegex = /!\[([^\]]*)\]\((.*?)\)/g;
   return message.replace(imageUrlRegex, (match, altText, url) => {
-    const newUrl = `/image/${encodeURIComponent(url)}`;
+    // const newUrl = `/image/${encodeURIComponent(url)}`;
+    const newUrl = `https://chat.totob12.com/image/${url.replace("\'", "")}`;
     return `![${altText}](${newUrl})`;
   });
 }
@@ -731,7 +755,7 @@ function processAIResponse(data, isError = false) {
   } else if (data.tool) {
     const toolName = data.tool.name;
     const toolParameters = JSON.stringify(data.tool.parameters);
-    latestAIMessageElement.innerHTML += `using '${toolName}' with ${toolParameters}`;
+    latestAIMessageElement.innerHTML += `\nusing '${toolName}' with ${toolParameters}`;
   }
 
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -803,7 +827,7 @@ function stopAIResponse(uuid) {
 function sendMessage() {
   const userText = inputField.value.trim();
 
-  if (userText.length > 60000) {
+  if (userText.length > charLimit) {
     displayNotification(
       "Character limit exceeded. Please shorten your message.",
       "error",
