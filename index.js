@@ -27,20 +27,6 @@ async function switchCohere() {
   console.log(cohere_api_key)
 }
 
-function getMimeType(url) {
-  const extension = url.split('?')[0].split('.').pop();
-  const mimeTypes = {
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'png': 'image/png',
-    'gif': 'image/gif',
-    'bmp': 'image/bmp',
-    'tiff': 'image/tiff',
-    'webp': 'image/webp'
-  };
-  return mimeTypes[extension.toLowerCase()] || 'application/octet-stream';
-}
-
 global.EventSource = require("eventsource");
 global.window = {
   setTimeout: function (callback, time, smth) {
@@ -109,18 +95,21 @@ app.post("/api", async (req, res) => {
 });
 
 app.get("/image/*", async (req, res) => {
-  const imageUrl = decodeURIComponent(req.params[0]);
+  const imageUrl = decodeURIComponent(req.originalUrl.substr(7));
 
   try {
     const imageResponse = await axios.get(imageUrl, {
-      responseType: 'arraybuffer'
+      responseType: 'stream',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'
+      }
     });
 
-    const contentType = getMimeType(imageUrl);
-    res.set('Content-Type', contentType);
-    res.send(Buffer.from(imageResponse.data));
+    res.set('Content-Type', imageResponse.headers['content-type']);
+
+    imageResponse.data.pipe(res);
   } catch (error) {
-    console.error('Failed to retrieve the image:', error.message);
+    console.error('Failed to retrieve the image:', error);
     res.status(500).send("Failed to retrieve image");
   }
 });
@@ -164,8 +153,8 @@ async function search_web(input) {
     search_depth: "basic",
     include_answer: false,
     include_images: true,
-    include_raw_content: false,
-    max_results: 5,
+    include_raw_content: true,
+    max_results: 3,
     include_domains: [],
     exclude_domains: [],
   };
