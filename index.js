@@ -21,6 +21,7 @@ let currentApiKeyIndex = 0;
 let apiKeys = [
   process.env["CO_API_KEY"],
   process.env["CO_API_KEY0"],
+  process.env["CO_API_KEY1"],
   process.env["CO_API_KEY2"],
 ];
 
