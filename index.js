@@ -353,7 +353,7 @@ wss.on("connection", function connection(ws) {
 
         // console.log(chatHistory);
 
-        const message = messageData.text;
+        const userMessage = messageData.text;
         let fullPreamble = preamble;
         if (messageData.ipDetails) {
           const userLocation = `${messageData.ipDetails.location.city}, ${messageData.ipDetails.location.state}, ${messageData.ipDetails.location.country}`;
@@ -365,84 +365,149 @@ wss.on("connection", function connection(ws) {
 The user is located in ${userLocation}. They are in the timezone of ${userTimezone} and their local time is ${userTime}.`;
         }
 
-        const initial_response = await cohere.chat({
+        const initial_response = await cohere.chatStream({
           model: "command-r",
           tools: tools,
           temperature: 0.7,
           preamble: fullPreamble,
-          message: message,
+          message: userMessage,
           chatHistory: chatHistory,
           apiKey: cohere_api_key,
         });
 
-        console.log("Cohere initial response:");
-        console.log(initial_response);
-        // console.log(initial_response.toolCalls)
-        let response;
-
-        if (Array.isArray(initial_response.toolCalls)) {
-          console.log('Cohere "recommends" doing the following tool calls:');
-          for (const tool_call of initial_response.toolCalls) {
-            console.log(tool_call);
-            ws.send(
-              JSON.stringify({
-                type: "AI_RESPONSE",
-                uuid: conversationUUID,
-                tool: tool_call,
-              }),
-            );
-          }
-
-          if (initial_response.text != "") {
-            console.log(initial_response.text);
-          }
-          const tool_results = [];
-
-          for (const tool of initial_response.toolCalls) {
-            const output = await mapping[tool.name](tool.parameters);
-            const outputs = [output];
-            tool_results.push({
-              call: tool,
-              outputs: outputs,
-            });
-          }
-
-          console.log("Tool results to be fed back:");
-          console.log(tool_results);
-
-          response = await cohere.chatStream({
-            model: "command-r",
-            tools: tools,
-            tool_results: tool_results,
-            temperature: 0.2,
-            preamble: fullPreamble,
-            message: message,
-            chatHistory: chatHistory,
-            apiKey: cohere_api_key,
-          });
-
-          for await (const message of response) {
-            if (message.eventType === "text-generation") {
-              // console.log(message);
+        for await (const initial_message of initial_response) {
+            if (initial_message.eventType === "text-generation") {
               ws.send(
                 JSON.stringify({
                   type: "AI_RESPONSE",
                   uuid: conversationUUID,
-                  text: message.text,
+                  text: initial_message.text,
                 }),
               );
+            } else if (initial_message.eventType === "tool-calls-generation") {
+              console.log('Cohere "recommends" doing the following tool calls:');
+              for (const tool_call of initial_message.toolCalls) {
+                console.log(tool_call);
+                ws.send(
+                  JSON.stringify({
+                    type: "AI_RESPONSE",
+                    uuid: conversationUUID,
+                    tool: tool_call,
+                  }),
+                );
+              }
+
+              if (initial_message.text != "") {
+                console.log(initial_message.text);
+              }
+              const tool_results = [];
+
+              for (const tool of initial_message.toolCalls) {
+                const output = await mapping[tool.name](tool.parameters);
+                const outputs = [output];
+                tool_results.push({
+                  call: tool,
+                  outputs: outputs,
+                });
+              }
+
+              console.log("Tool results to be fed back:");
+              console.log(tool_results);
+
+              response = await cohere.chatStream({
+                model: "command-r",
+                tools: tools,
+                tool_results: tool_results,
+                temperature: 0.2,
+                preamble: fullPreamble,
+                message: userMessage,
+                chatHistory: chatHistory,
+                apiKey: cohere_api_key,
+              });
+
+              for await (const finale_message of response) {
+                if (finale_message.eventType === "text-generation") {
+                  // console.log(finale_message);
+                  ws.send(
+                    JSON.stringify({
+                      type: "AI_RESPONSE",
+                      uuid: conversationUUID,
+                      text: finale_message.text,
+                    }),
+                  );
+                }
+              }
             }
-          }
-        } else {
-          response = initial_response.text;
-          ws.send(
-            JSON.stringify({
-              type: "AI_RESPONSE",
-              uuid: conversationUUID,
-              text: response,
-            }),
-          );
         }
+
+        // console.log("Cohere initial response:");
+        // console.log(initial_response);
+        // console.log(initial_response.toolCalls)
+        // let response;
+
+        // if (Array.isArray(initial_response.toolCalls)) {
+          // console.log('Cohere "recommends" doing the following tool calls:');
+          // for (const tool_call of initial_response.toolCalls) {
+          //   console.log(tool_call);
+          //   ws.send(
+          //     JSON.stringify({
+          //       type: "AI_RESPONSE",
+          //       uuid: conversationUUID,
+          //       tool: tool_call,
+          //     }),
+          //   );
+          // }
+
+          // if (initial_response.text != "") {
+          //   console.log(initial_response.text);
+          // }
+          // const tool_results = [];
+
+          // for (const tool of initial_response.toolCalls) {
+          //   const output = await mapping[tool.name](tool.parameters);
+          //   const outputs = [output];
+          //   tool_results.push({
+          //     call: tool,
+          //     outputs: outputs,
+          //   });
+          // }
+
+          // console.log("Tool results to be fed back:");
+          // console.log(tool_results);
+
+          // response = await cohere.chatStream({
+          //   model: "command-r",
+          //   tools: tools,
+          //   tool_results: tool_results,
+          //   temperature: 0.2,
+          //   preamble: fullPreamble,
+          //   message: message,
+          //   chatHistory: chatHistory,
+          //   apiKey: cohere_api_key,
+          // });
+
+          // for await (const message of response) {
+          //   if (message.eventType === "text-generation") {
+          //     // console.log(message);
+          //     ws.send(
+          //       JSON.stringify({
+          //         type: "AI_RESPONSE",
+          //         uuid: conversationUUID,
+          //         text: message.text,
+          //       }),
+          //     );
+          //   }
+          // }
+        // } else {
+        //   response = initial_response.text;
+        //   ws.send(
+        //     JSON.stringify({
+        //       type: "AI_RESPONSE",
+        //       uuid: conversationUUID,
+        //       text: response,
+        //     }),
+        //   );
+        // }
 
         // ws.send(
         //         JSON.stringify({
