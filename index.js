@@ -183,7 +183,7 @@ async function search_web(input) {
     }
   } catch (error) {
     console.error("Error calling Tavily search API:", error);
-    return { results: null, images: null };;
+    return { results: null, images: null };
   }
 }
 
@@ -212,7 +212,7 @@ async function get_weather(input) {
 
 async function wolfram_alpha(input) {
   try {
-    const url = `https://www.wolframalpha.com/api/v1/llm-api?input=${input.query}&appid=${process.env['WOLFRAMALPHA_API_KEY']}`;
+    const url = `https://www.wolframalpha.com/api/v1/llm-api?input=${input.query}&appid=${process.env["WOLFRAMALPHA_API_KEY"]}`;
     const response = await axios.get(url);
     const data = response.data;
     return { results: data };
@@ -224,8 +224,13 @@ async function wolfram_alpha(input) {
 
 async function get_images(input) {
   try {
-    const results = await image_search({ query: input.query, moderate: false, iterations: 1, retries: 2 });
-    const images = results.map(result => result.image);
+    const results = await image_search({
+      query: input.query,
+      moderate: false,
+      iterations: 1,
+      retries: 2,
+    });
+    const images = results.map((result) => result.image);
     // console.log(images)
     return { results: images };
   } catch (error) {
@@ -257,8 +262,7 @@ const tools = [
   },
   {
     name: "search_web",
-    description:
-      "Search the web for a given query",
+    description: "Search the web for a given query",
     parameter_definitions: {
       query: {
         description: "The query to search for",
@@ -280,7 +284,8 @@ const tools = [
   },
   {
     name: "wolfram_alpha",
-    description: "Ask Wolfram Alpha a query to retrive factual data and information",
+    description:
+      "Ask Wolfram Alpha a query to retrive factual data and information",
     parameter_definitions: {
       query: {
         description: "The query to ask Wolfram Alpha",
@@ -376,68 +381,77 @@ The user is located in ${userLocation}. They are in the timezone of ${userTimezo
         });
 
         for await (const initial_message of initial_response) {
-            if (initial_message.eventType === "text-generation") {
+          console.log(initial_message);
+          if (initial_message.eventType === "text-generation") {
+            ws.send(
+              JSON.stringify({
+                type: "AI_RESPONSE",
+                uuid: conversationUUID,
+                text: initial_message.text,
+              }),
+            );
+          } else if (initial_message.eventType === "tool-calls-generation") {
+            console.log('Cohere "recommends" doing the following tool calls:');
+            for (const tool_call of initial_message.toolCalls) {
+              console.log(tool_call);
               ws.send(
                 JSON.stringify({
                   type: "AI_RESPONSE",
                   uuid: conversationUUID,
-                  text: initial_message.text,
+                  tool: tool_call,
                 }),
               );
-            } else if (initial_message.eventType === "tool-calls-generation") {
-              console.log('Cohere "recommends" doing the following tool calls:');
-              for (const tool_call of initial_message.toolCalls) {
-                console.log(tool_call);
+            }
+
+            if (initial_message.text != "") {
+              console.log(initial_message.text);
+            }
+            const tool_results = [];
+
+            for (const tool of initial_message.toolCalls) {
+              const output = await mapping[tool.name](tool.parameters);
+              const outputs = [output];
+              tool_results.push({
+                call: tool,
+                outputs: outputs,
+              });
+            }
+
+            console.log("Tool results to be fed back:");
+            console.log(tool_results);
+
+            response = await cohere.chatStream({
+              model: "command-r",
+              tools: tools,
+              tool_results: tool_results,
+              temperature: 0.2,
+              preamble: fullPreamble,
+              message: userMessage,
+              chatHistory: chatHistory,
+              apiKey: cohere_api_key,
+            });
+
+            for await (const finale_message of response) {
+              if (finale_message.eventType === "text-generation") {
+                // console.log(finale_message);
                 ws.send(
                   JSON.stringify({
                     type: "AI_RESPONSE",
                     uuid: conversationUUID,
-                    tool: tool_call,
+                    text: finale_message.text,
                   }),
                 );
               }
-
-              if (initial_message.text != "") {
-                console.log(initial_message.text);
-              }
-              const tool_results = [];
-
-              for (const tool of initial_message.toolCalls) {
-                const output = await mapping[tool.name](tool.parameters);
-                const outputs = [output];
-                tool_results.push({
-                  call: tool,
-                  outputs: outputs,
-                });
-              }
-
-              console.log("Tool results to be fed back:");
-              console.log(tool_results);
-
-              response = await cohere.chatStream({
-                model: "command-r",
-                tools: tools,
-                tool_results: tool_results,
-                temperature: 0.2,
-                preamble: fullPreamble,
-                message: userMessage,
-                chatHistory: chatHistory,
-                apiKey: cohere_api_key,
-              });
-
-              for await (const finale_message of response) {
-                if (finale_message.eventType === "text-generation") {
-                  // console.log(finale_message);
-                  ws.send(
-                    JSON.stringify({
-                      type: "AI_RESPONSE",
-                      uuid: conversationUUID,
-                      text: finale_message.text,
-                    }),
-                  );
-                }
-              }
             }
+          } else if (initial_message.eventType === "stream-end" && initial_message.response.finishReason != "COMPLETE") {
+            ws.send(
+              JSON.stringify({
+                type: "AI_RESPONSE",
+                uuid: conversationUUID,
+                text: initial_message.response.finishReason,
+              }),
+            );
+          }
         }
 
         // console.log("Cohere initial response:");
@@ -446,58 +460,58 @@ The user is located in ${userLocation}. They are in the timezone of ${userTimezo
         // let response;
 
         // if (Array.isArray(initial_response.toolCalls)) {
-          // console.log('Cohere "recommends" doing the following tool calls:');
-          // for (const tool_call of initial_response.toolCalls) {
-          //   console.log(tool_call);
-          //   ws.send(
-          //     JSON.stringify({
-          //       type: "AI_RESPONSE",
-          //       uuid: conversationUUID,
-          //       tool: tool_call,
-          //     }),
-          //   );
-          // }
+        // console.log('Cohere "recommends" doing the following tool calls:');
+        // for (const tool_call of initial_response.toolCalls) {
+        //   console.log(tool_call);
+        //   ws.send(
+        //     JSON.stringify({
+        //       type: "AI_RESPONSE",
+        //       uuid: conversationUUID,
+        //       tool: tool_call,
+        //     }),
+        //   );
+        // }
 
-          // if (initial_response.text != "") {
-          //   console.log(initial_response.text);
-          // }
-          // const tool_results = [];
+        // if (initial_response.text != "") {
+        //   console.log(initial_response.text);
+        // }
+        // const tool_results = [];
 
-          // for (const tool of initial_response.toolCalls) {
-          //   const output = await mapping[tool.name](tool.parameters);
-          //   const outputs = [output];
-          //   tool_results.push({
-          //     call: tool,
-          //     outputs: outputs,
-          //   });
-          // }
+        // for (const tool of initial_response.toolCalls) {
+        //   const output = await mapping[tool.name](tool.parameters);
+        //   const outputs = [output];
+        //   tool_results.push({
+        //     call: tool,
+        //     outputs: outputs,
+        //   });
+        // }
 
-          // console.log("Tool results to be fed back:");
-          // console.log(tool_results);
+        // console.log("Tool results to be fed back:");
+        // console.log(tool_results);
 
-          // response = await cohere.chatStream({
-          //   model: "command-r",
-          //   tools: tools,
-          //   tool_results: tool_results,
-          //   temperature: 0.2,
-          //   preamble: fullPreamble,
-          //   message: message,
-          //   chatHistory: chatHistory,
-          //   apiKey: cohere_api_key,
-          // });
+        // response = await cohere.chatStream({
+        //   model: "command-r",
+        //   tools: tools,
+        //   tool_results: tool_results,
+        //   temperature: 0.2,
+        //   preamble: fullPreamble,
+        //   message: message,
+        //   chatHistory: chatHistory,
+        //   apiKey: cohere_api_key,
+        // });
 
-          // for await (const message of response) {
-          //   if (message.eventType === "text-generation") {
-          //     // console.log(message);
-          //     ws.send(
-          //       JSON.stringify({
-          //         type: "AI_RESPONSE",
-          //         uuid: conversationUUID,
-          //         text: message.text,
-          //       }),
-          //     );
-          //   }
-          // }
+        // for await (const message of response) {
+        //   if (message.eventType === "text-generation") {
+        //     // console.log(message);
+        //     ws.send(
+        //       JSON.stringify({
+        //         type: "AI_RESPONSE",
+        //         uuid: conversationUUID,
+        //         text: message.text,
+        //       }),
+        //     );
+        //   }
+        // }
         // } else {
         //   response = initial_response.text;
         //   ws.send(
