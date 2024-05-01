@@ -139,8 +139,7 @@ app.get('/favicons', (req, res) => {
             console.log(err);
             return res.status(500).send('Failed to list favicons');
         }
-        const webpFiles = files.filter(file => file.endsWith('.webp'));
-        res.json(webpFiles);
+        res.json(files);
     });
 });
 

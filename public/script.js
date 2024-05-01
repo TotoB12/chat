@@ -59,7 +59,7 @@ function fetchFavicons() {
               const faviconIndex = Math.floor(Math.random() * favicons.length);
               const faviconPath = `/assets/favicons/${favicons[faviconIndex]}`;
               const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-              link.type = 'image/webp';
+              // link.type = 'image/webp';
               link.rel = 'icon';
               link.href = faviconPath;
               document.getElementsByTagName('head')[0].appendChild(link);
