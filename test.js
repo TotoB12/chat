@@ -17,7 +17,7 @@
 
 const { image_search } = require("duckduckgo-images-api");
 
-image_search({ query: "seltin sweety nude", moderate: false, iterations: 1, retries: 2 }).then((results) => {
+image_search({ query: "cute dog", moderate: false, iterations: 1, retries: 2 }).then((results) => {
   results.forEach((result) => {
     console.log(result.image);
   });

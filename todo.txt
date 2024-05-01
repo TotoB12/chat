@@ -1,4 +1,4 @@
-displayed images not working for old images
+% displayed images not working for old images
 
-register and generate multiple images
+% register and generate multiple images
 
