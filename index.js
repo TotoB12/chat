@@ -102,7 +102,7 @@ app.post("/api", async (req, res) => {
     // res.json({ response });
 
     res.json({
-      response: "This serice is in development, please stop using it.",
+      response: "This serice is in development, stop using it.",
     });
   } catch (error) {
     console.error(error);
