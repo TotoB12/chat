@@ -626,7 +626,7 @@ function startWebSocket() {
         processAIResponse(data, true);
       }
 
-      if (data.type === "AI_COMPLETE" && data.uniqueIdentifier === "7777") {
+      if (data.type === "AI_COMPLETE" && data.uniqueIdentifier === "test") {
         // console.log("UUID:", data.uuid);
         if (
           latestAIMessageElement &&
@@ -880,8 +880,10 @@ async function sendMessage() {
     uuid: currentConversationUUID,
     history: getHistory(),
     text: userText,
+    securityCode: localStorage.getItem('securityCode') || '',
     ipDetails: ipDetails,
   };
+
 
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(message));
@@ -1019,6 +1021,13 @@ function scrollToBottomOfTextarea() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  const securityCodeInput = document.getElementById('security-code-input');
+  const storedSecurityCode = localStorage.getItem('securityCode');
+
+  if (storedSecurityCode) {
+    securityCodeInput.value = storedSecurityCode;
+  }
+  
   startWebSocket();
   deleteAllButton.addEventListener("click", function () {
     if (this.classList.contains("disabled") === true) {
@@ -1072,6 +1081,13 @@ document.addEventListener("DOMContentLoaded", function () {
   settingsCloseButton.onclick = function () {
     settingsModal.style.display = "none";
   };
+
+  document.getElementById('security-code-input').addEventListener('input', function() {
+    const code = this.value;
+    if(code.length === 4 && /^\d{4}$/.test(code)) {
+      localStorage.setItem('securityCode', code);
+    }
+  });
 
   window.onclick = function (event) {
     if (event.target == settingsModal) {

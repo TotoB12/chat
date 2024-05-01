@@ -868,6 +868,7 @@ code.hljs {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+  margin-top: 20px;
 }
 
 .setting-name {
@@ -948,6 +949,13 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+
+.security-code-input {
+  border-radius: 7px;
+  font-size: 1.2em;
+  width: 50px;
+  text-align: center;
 }
 
 .image-loading-icon {

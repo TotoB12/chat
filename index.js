@@ -313,7 +313,25 @@ wss.on("connection", function connection(ws) {
 
   ws.on("message", async function incoming(messageBuffer) {
     const messageData = JSON.parse(messageBuffer.toString());
+    const securityCode = messageData.securityCode;
     const conversationUUID = messageData.uuid;
+    if (!validateSecurityCode(securityCode)) {
+      ws.send(
+        JSON.stringify({
+          type: "AI_RESPONSE",
+          uuid: conversationUUID,
+          text: "Invalid security code. Input a valid security code in the settings page.",
+        }),
+      );
+      ws.send(
+        JSON.stringify({
+          type: "AI_COMPLETE",
+          uuid: conversationUUID,
+          uniqueIdentifier: "test",
+        }),
+      );
+      return;
+    }
 
     async function processMessage() {
       try {
@@ -536,7 +554,7 @@ The user is located in ${userLocation}. They are in the timezone of ${userTimezo
           JSON.stringify({
             type: "AI_COMPLETE",
             uuid: conversationUUID,
-            uniqueIdentifier: "7777",
+            uniqueIdentifier: "test",
           }),
         );
       } catch (error) {
@@ -566,7 +584,7 @@ The user is located in ${userLocation}. They are in the timezone of ${userTimezo
           JSON.stringify({
             type: "AI_COMPLETE",
             uuid: conversationUUID,
-            uniqueIdentifier: "7777",
+            uniqueIdentifier: "test",
           }),
         );
       }
@@ -615,7 +633,7 @@ function generateUniqueConnectionUUID() {
 }
 
 function validateSecurityCode(code) {
-  const secretCode = process.env["API_CODE"];
+  const secretCode = process.env["SECURITY_CODE"];
   return code === secretCode;
 }
 
