@@ -51,6 +51,25 @@ anim_canvas.height = window.innerHeight;
 // anim_canvas.width = 1400;
 // anim_canvas.height = 280;
 
+function fetchFavicons() {
+  fetch('/favicons')
+      .then(response => response.json())
+      .then(favicons => {
+          if (favicons.length > 0) {
+              const faviconIndex = Math.floor(Math.random() * favicons.length);
+              const faviconPath = `/assets/favicons/${favicons[faviconIndex]}`;
+              const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+              link.type = 'image/webp';
+              link.rel = 'icon';
+              link.href = faviconPath;
+              document.getElementsByTagName('head')[0].appendChild(link);
+          }
+      })
+      .catch(error => console.error('Error fetching favicons:', error));
+}
+
+fetchFavicons();
+
 function generateUUID() {
   let uuid;
   do {

@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const fs = require('fs');
 const http = require("http");
 const fetch = require("node-fetch");
 const cors = require("cors");
@@ -128,6 +129,19 @@ app.get("/image/*", async (req, res) => {
     console.error("Failed to retrieve the image:", error);
     res.status(500).send("Failed to retrieve image");
   }
+});
+
+app.get('/favicons', (req, res) => {
+    const faviconDir = path.join(__dirname, 'public', 'assets', 'favicons');
+
+    fs.readdir(faviconDir, (err, files) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).send('Failed to list favicons');
+        }
+        const webpFiles = files.filter(file => file.endsWith('.webp'));
+        res.json(webpFiles);
+    });
 });
 
 app.use((req, res, next) => {
