@@ -1,24 +1,29 @@
-// const axios = require("axios");
+const nodeIcal = require("node-ical");
 
-// async function wolfram(input) {
-//   try {
-//     const url = `https://www.wolframalpha.com/api/v1/llm-api?input=${input.query}&appid=GQ8WVG-99U2Q953JR`;
-//     const response = await axios.get(url);
-//     const data = response.data;
-//     console.log(data);
-//     return { results: data };
-//   } catch (error) {
-//     console.error(error);
-//     return { weather: null };
-//   }
-// }
+async function get_calendar(input) {
+  try {
+    const icalUrl =
+      "https://pronote.rochambeau.org/ical/Edt.ics?icalsecurise=88A316BD1DEF6A182BB032BC12966EEF3E93B0D66C78363DBB5170D51949E1D0890359EE82E0E300D2254C2E61DC5B55&version=2023.0.2.8&param=66683d31";
+    nodeIcal.fromURL(icalUrl, {}, (err, data) => {
+      if (err) {
+        console.error("Failed to fetch iCal data:", err);
+        return;
+      }
+      const today = new Date();
+      const nextWeek = new Date(today);
+      nextWeek.setDate(today.getDate() + 7);
 
-// wolfram("1+1");
+      const events = Object.values(data).filter((e) => e.type === "VEVENT");
+      const upcomingEvents = events.filter((event) => {
+        const eventStart = new Date(event.start);
+        return eventStart >= today && eventStart <= nextWeek;
+      });
 
-const { image_search } = require("duckduckgo-images-api");
+      console.log(upcomingEvents);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
 
-image_search({ query: "cute dog", moderate: false, iterations: 1, retries: 2 }).then((results) => {
-  results.forEach((result) => {
-    console.log(result.image);
-  });
-});
+get_calendar();

@@ -11,6 +11,7 @@ const { v4: uuidv4 } = require("uuid");
 const connectionStates = new Map();
 const axios = require("axios");
 const { image_search } = require("duckduckgo-images-api");
+const nodeIcal = require('node-ical');
 
 const app = express();
 const server = http.createServer(app);
@@ -252,12 +253,45 @@ async function get_images(input) {
   }
 }
 
+async function get_calendar(input) {
+  const icalUrl = "https://pronote.rochambeau.org/ical/Edt.ics?icalsecurise=88A316BD1DEF6A182BB032BC12966EEF3E93B0D66C78363DBB5170D51949E1D0890359EE82E0E300D2254C2E61DC5B55&version=2023.0.2.9&param=66683d31";
+
+  return await new Promise((resolve, reject) => {
+    nodeIcal.fromURL(icalUrl, {}, (err, data) => {
+      if (err) {
+        console.error("Failed to fetch iCal data:", err);
+        reject({ next_event: null });
+        return;
+      }
+      // const today = new Date();
+      // const nextWeek = new Date(today);
+      // nextWeek.setDate(today.getDate() + 7);
+
+      const events = Object.values(data).filter(e => e.type === "VEVENT");
+      // const upcomingEvents = events.filter(event => {
+      //   const eventStart = new Date(event.start);
+      //   return eventStart >= today && eventStart <= nextWeek;
+      // });
+      
+      // find only the next event
+      const nextEvent = events[0];
+
+      // console.log("Upcoming events:", upcomingEvents);
+      // resolve({ events_next_7_days: upcomingEvents });
+      console.log("Next event:", nextEvent);
+      resolve({ next_event: nextEvent });
+    });
+  });
+}
+
+
 const mapping = {
   generate_image: generate_image,
   search_web: search_web,
   get_weather: get_weather,
   wolfram_alpha: wolfram_alpha,
   get_images: get_images,
+  get_calendar: get_calendar,
 };
 
 const tools = [
@@ -317,6 +351,11 @@ const tools = [
         required: true,
       },
     },
+  },
+  {
+    name: "get_calendar",
+    description: "Get the upcoming calendar events of Antonin Beliard for the next 7 days",
+    parameter_definitions: {},
   },
 ]; // , returns web results and images
 
@@ -398,7 +437,8 @@ wss.on("connection", function connection(ws) {
           fullPreamble = `${preamble}
 
 ## User Information
-The user is located in ${userLocation}. They are in the timezone of ${userTimezone} and their local time is ${userTime}.`;
+The user is located in ${userLocation}. They are in the timezone of ${userTimezone} and their local time is ${userTime}.
+Remember this, and keep it in mind for your answers`;
         }
 
         const initial_response = await cohere.chatStream({
