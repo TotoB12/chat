@@ -133,6 +133,7 @@ body {
 
 #send-button,
 #expander-button {
+    position: relative;
     background: var(--main-color);
     color: black;
     padding: 10px 20px;
@@ -144,6 +145,12 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden;
+
+    & span {
+      transition-duration: .3s;
+      transition-timing-function: cubic-bezier(0,-0.01,.25,1.92);
+    }
 }
 
 #send-button.ai-responding {
@@ -151,12 +158,21 @@ body {
     color: black;
 }
 
-/* #send-button.ai-responding:hover{
-    background-color: var(--hover-color);
-} */
+#send-button:before {
+  content: "Send";
+  font-family: 'PolySans Bulky';
+  position: absolute;
+  transform: translateY(200%);
+  transition-duration: .3s;
+  transition-timing-function: cubic-bezier(0,-0.01,.25,1.92);
+}
 
-#send-button:hover {
-    background-color: var(--hover-color);
+#send-button:hover span {
+  transform: translateY(-150%);
+}
+
+#send-button:hover:before {
+  transform: translateY(0%);
 }
 
 #expander-button {
