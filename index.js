@@ -17,7 +17,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-let cohere_api_key = process.env["CO_API_KEY0"];
+let cohere_api_key = process.env["CO_API_KEY"];
 let currentApiKeyIndex = 0;
 let apiKeys = [
   process.env["CO_API_KEY"],
@@ -367,27 +367,9 @@ wss.on("connection", function connection(ws) {
     const messageData = JSON.parse(messageBuffer.toString());
     const securityCode = messageData.securityCode;
     const conversationUUID = messageData.uuid;
-    if (!validateSecurityCode(securityCode)) {
-      ws.send(
-        JSON.stringify({
-          type: "AI_RESPONSE",
-          uuid: conversationUUID,
-          text: "Invalid security code. Input a valid security code in the settings page.",
-        }),
-      );
-      ws.send(
-        JSON.stringify({
-          type: "AI_COMPLETE",
-          uuid: conversationUUID,
-          uniqueIdentifier: "test",
-        }),
-      );
-      return;
-    }
 
     async function processMessage() {
       try {
-        const cohere = new CohereClient({ token: cohere_api_key });
         if (messageData.type === "stop_ai_response") {
           console.log("Stopping AI response for connection:", connectionId);
           connectionStates.set(connectionId, { continueStreaming: false });
@@ -398,6 +380,26 @@ wss.on("connection", function connection(ws) {
           ws.send(JSON.stringify({ type: "pong" }));
           return;
         }
+
+        if (!validateSecurityCode(securityCode)) {
+          ws.send(
+            JSON.stringify({
+              type: "AI_RESPONSE",
+              uuid: conversationUUID,
+              text: "Invalid security code. Input a valid security code in the settings page.",
+            }),
+          );
+          ws.send(
+            JSON.stringify({
+              type: "AI_COMPLETE",
+              uuid: conversationUUID,
+              uniqueIdentifier: "test",
+            }),
+          );
+          return;
+        }
+        
+        const cohere = new CohereClient({ token: cohere_api_key });
 
         // console.log(messageData);
 
