@@ -1,0 +1,33 @@
+#trash-can {
+  position: relative;
+  width: 25px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  &, #trash-can-lid, #trash-can-body {
+    transition-duration: .5s;
+  }
+
+  #trash-can-lid {
+    transform-origin: 7% 100%;
+  }
+
+  #trash-can-body {
+    transform: translateY(-11.5%);
+    width: 86%;
+  }
+}
+
+#deleteAllButton:not(.disabled) #trash-can:hover {
+  transform: rotate(5deg);
+
+  #trash-can-lid {
+    transform: rotate(-40deg) translate(-10%, -30%);
+  }
+
+  #trash-can-body {
+    transform: translateY(10%);
+  }
+}

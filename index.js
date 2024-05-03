@@ -16,9 +16,8 @@ const nodeIcal = require('node-ical');
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-const cohere = new CohereClient();
 
-let cohere_api_key = process.env["CO_API_KEY"];
+let cohere_api_key = process.env["CO_API_KEY0"];
 let currentApiKeyIndex = 0;
 let apiKeys = [
   process.env["CO_API_KEY"],
@@ -91,6 +90,7 @@ app.post("/api", async (req, res) => {
   }
 
   try {
+    // const cohere = new CohereClient({ token: cohere_api_key });
     // // console.log(prompt);
     // const chat = await cohere.chat({
     //   chatHistory: [],
@@ -387,6 +387,7 @@ wss.on("connection", function connection(ws) {
 
     async function processMessage() {
       try {
+        const cohere = new CohereClient({ token: cohere_api_key });
         if (messageData.type === "stop_ai_response") {
           console.log("Stopping AI response for connection:", connectionId);
           connectionStates.set(connectionId, { continueStreaming: false });
@@ -448,7 +449,7 @@ Remember this, and keep it in mind for your answers`;
           preamble: fullPreamble,
           message: userMessage,
           chatHistory: chatHistory,
-          apiKey: cohere_api_key,
+          // apiKey: cohere_api_key,
         });
 
         for await (const initial_message of initial_response) {
@@ -499,7 +500,7 @@ Remember this, and keep it in mind for your answers`;
               preamble: fullPreamble,
               message: userMessage,
               chatHistory: chatHistory,
-              apiKey: cohere_api_key,
+              // apiKey: cohere_api_key,
             });
 
             for await (const finale_message of response) {
