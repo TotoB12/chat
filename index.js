@@ -148,29 +148,33 @@ app.use((req, res, next) => {
   res.sendFile(path.join(__dirname, "public", "404.html"));
 });
 
-async function generate_image(input) {
-  const { Client } = await import("@gradio/client");
+// async function generate_image(input) {
+//   const { Client } = await import("@gradio/client");
 
-  const app = await Client.connect("https://hysts-SDXL.hf.space/run");
-  const result = await app.predict("/run", [
-    input.prompt, // prompt
-    "Hello!!", // negative prompt
-    "Hello!!", // prompt 2
-    "Hello!!", // negative prompt 2
-    false, // negative prompt?
-    false, // prompt 2?
-    false, // negative prompt 2?
-    Math.floor(Math.random() * 99999999999999), // seed
-    1024, // width
-    1024, // height
-    5, // base guidance scale
-    5, // refiner guidance scale
-    25, // base inference steps
-    25, // refiner inference steps
-    false, // refiner?
-  ]);
-  // console.log(result)
-  return { url: result.data[0].url };
+//   const app = await Client.connect("https://hysts-SDXL.hf.space/run");
+//   const result = await app.predict("/run", [
+//     input.prompt, // prompt
+//     "Hello!!", // negative prompt
+//     "Hello!!", // prompt 2
+//     "Hello!!", // negative prompt 2
+//     false, // negative prompt?
+//     false, // prompt 2?
+//     false, // negative prompt 2?
+//     Math.floor(Math.random() * 99999999999999), // seed
+//     1024, // width
+//     1024, // height
+//     5, // base guidance scale
+//     5, // refiner guidance scale
+//     25, // base inference steps
+//     25, // refiner inference steps
+//     false, // refiner?
+//   ]);
+//   // console.log(result)
+//   return { url: result.data[0].url };
+// }
+
+async function generate_image(input) {
+  return { error: "This service is in development, stop using it." };
 }
 
 async function search_web(input) {
