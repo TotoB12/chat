@@ -449,7 +449,7 @@ Remember this, and keep it in mind for your answers`;
         }
 
         const initial_response = await cohere.chatStream({
-          model: "command-r",
+          model: "command-r-plus",
           tools: tools,
           temperature: 0.7,
           preamble: fullPreamble,
@@ -499,7 +499,7 @@ Remember this, and keep it in mind for your answers`;
             console.log(tool_results);
 
             response = await cohere.chatStream({
-              model: "command-r",
+              model: "command-r-plus",
               tools: tools,
               tool_results: tool_results,
               temperature: 0.2,
