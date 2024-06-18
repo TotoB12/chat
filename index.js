@@ -449,6 +449,7 @@ Remember this, and keep it in mind for your answers`;
         }
 
         const initial_response = await cohere.chatStream({
+          force_single_step: true,
           model: "command-r-plus",
           tools: tools,
           temperature: 0.7,
@@ -499,6 +500,7 @@ Remember this, and keep it in mind for your answers`;
             console.log(tool_results);
 
             response = await cohere.chatStream({
+              force_single_step: true,
               model: "command-r-plus",
               tools: tools,
               tool_results: tool_results,
