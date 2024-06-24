@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-const fs = require('fs');
+const fs = require("fs");
 const http = require("http");
 const fetch = require("node-fetch");
 const cors = require("cors");
@@ -11,7 +11,7 @@ const { v4: uuidv4 } = require("uuid");
 const connectionStates = new Map();
 const axios = require("axios");
 const { image_search } = require("duckduckgo-images-api");
-const nodeIcal = require('node-ical');
+const nodeIcal = require("node-ical");
 
 const app = express();
 const server = http.createServer(app);
@@ -90,21 +90,22 @@ app.post("/api", async (req, res) => {
   }
 
   try {
-    // const cohere = new CohereClient({ token: cohere_api_key });
-    // // console.log(prompt);
-    // const chat = await cohere.chat({
-    //   chatHistory: [],
-    //   message: prompt,
-    //   // connectors: [{ id: 'web-search' }],
-    // });
+  const cohere = new CohereClient({ token: cohere_api_key });
+  // console.log(prompt);
+  const chat = await cohere.chat({
+    model: "command-r-plus",
+    chatHistory: [],
+    message: prompt,
+    // connectors: [{ id: 'web-search' }],
+  });
 
-    // const response = chat.text;
-    // // console.log(response);
-    // res.json({ response });
+  const response = chat.text;
+  // console.log(response);
+  res.json({ response });
 
-    res.json({
-      response: "This serice is in development, stop using it.",
-    });
+  // res.json({
+  //   response: "This serice is in development, stop using it.",
+  // });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error processing your request" });
@@ -132,16 +133,16 @@ app.get("/image/*", async (req, res) => {
   }
 });
 
-app.get('/favicons', (req, res) => {
-    const faviconDir = path.join(__dirname, 'public', 'assets', 'favicons');
+app.get("/favicons", (req, res) => {
+  const faviconDir = path.join(__dirname, "public", "assets", "favicons");
 
-    fs.readdir(faviconDir, (err, files) => {
-        if (err) {
-            console.log(err);
-            return res.status(500).send('Failed to list favicons');
-        }
-        res.json(files);
-    });
+  fs.readdir(faviconDir, (err, files) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).send("Failed to list favicons");
+    }
+    res.json(files);
+  });
 });
 
 app.use((req, res, next) => {
@@ -258,7 +259,8 @@ async function get_images(input) {
 }
 
 async function get_calendar(input) {
-  const icalUrl = "https://pronote.rochambeau.org/ical/Edt.ics?icalsecurise=88A316BD1DEF6A182BB032BC12966EEF3E93B0D66C78363DBB5170D51949E1D0890359EE82E0E300D2254C2E61DC5B55&version=2023.0.2.9&param=66683d31";
+  const icalUrl =
+    "https://pronote.rochambeau.org/ical/Edt.ics?icalsecurise=88A316BD1DEF6A182BB032BC12966EEF3E93B0D66C78363DBB5170D51949E1D0890359EE82E0E300D2254C2E61DC5B55&version=2023.0.2.9&param=66683d31";
 
   return await new Promise((resolve, reject) => {
     nodeIcal.fromURL(icalUrl, {}, (err, data) => {
@@ -271,12 +273,12 @@ async function get_calendar(input) {
       // const nextWeek = new Date(today);
       // nextWeek.setDate(today.getDate() + 7);
 
-      const events = Object.values(data).filter(e => e.type === "VEVENT");
+      const events = Object.values(data).filter((e) => e.type === "VEVENT");
       // const upcomingEvents = events.filter(event => {
       //   const eventStart = new Date(event.start);
       //   return eventStart >= today && eventStart <= nextWeek;
       // });
-      
+
       // find only the next event
       const nextEvent = events[0];
 
@@ -287,7 +289,6 @@ async function get_calendar(input) {
     });
   });
 }
-
 
 const mapping = {
   generate_image: generate_image,
@@ -358,7 +359,8 @@ const tools = [
   },
   {
     name: "get_calendar",
-    description: "Get the upcoming calendar events of Antonin Beliard for the next 7 days",
+    description:
+      "Get the upcoming calendar events of Antonin Beliard for the next 7 days",
     parameter_definitions: {},
   },
 ]; // , returns web results and images
@@ -402,7 +404,7 @@ wss.on("connection", function connection(ws) {
           );
           return;
         }
-        
+
         const cohere = new CohereClient({ token: cohere_api_key });
 
         // console.log(messageData);
@@ -523,7 +525,10 @@ Remember this, and keep it in mind for your answers`;
                 );
               }
             }
-          } else if (initial_message.eventType === "stream-end" && initial_message.response.finishReason != "COMPLETE") {
+          } else if (
+            initial_message.eventType === "stream-end" &&
+            initial_message.response.finishReason != "COMPLETE"
+          ) {
             ws.send(
               JSON.stringify({
                 type: "AI_RESPONSE",
