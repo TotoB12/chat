@@ -202,7 +202,7 @@ async function search_web(input) {
     }
   } catch (error) {
     console.error("Error calling Tavily search API:", error);
-    return { results: null, images: null };
+    return { error: error };
   }
 }
 
