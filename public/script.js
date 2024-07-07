@@ -900,6 +900,7 @@ async function sendMessage() {
     history: getHistory(),
     text: userText,
     securityCode: localStorage.getItem('securityCode') || '',
+    beta: localStorage.getItem('beta') || 'false',
     ipDetails: ipDetails,
   };
 
@@ -1042,9 +1043,15 @@ function scrollToBottomOfTextarea() {
 document.addEventListener("DOMContentLoaded", function () {
   const securityCodeInput = document.getElementById('security-code-input');
   const storedSecurityCode = localStorage.getItem('securityCode');
+  const betaCheckbox = document.getElementById('beta-checkbox');
+  const storedBeta = localStorage.getItem('beta');
 
   if (storedSecurityCode) {
     securityCodeInput.value = storedSecurityCode;
+  }
+
+  if (storedBeta) {
+    betaCheckbox.checked = storedBeta;
   }
   
   startWebSocket();
@@ -1106,6 +1113,11 @@ document.addEventListener("DOMContentLoaded", function () {
     if(code.length === 4 && /^\d{4}$/.test(code)) {
       localStorage.setItem('securityCode', code);
     }
+  });
+
+  document.getElementById('beta-checkbox').addEventListener('change', function() {
+    const isChecked = this.checked;
+    localStorage.setItem('beta', isChecked);
   });
 
   window.onclick = function (event) {

@@ -942,17 +942,17 @@ code.hljs {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--tertiary-color);
+  background-color: var(--secondary-color);
   -webkit-transition: .4s;
   transition: .4s;
 }
 
 input:focus + .slider {
-  box-shadow: 0 0 1px var(--secondary-color);
+  box-shadow: 0 0 1px var(--tertiary-color);
 }
 
 input:checked + .slider {
-  background-color: var(--secondary-color);
+  background-color: var(--tertiary-color);
 }
 
 input:checked + .slider:before {
