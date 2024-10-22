@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "https://esm.run/@google/generative-ai";
 import { marked } from "https://esm.run/marked";
 
 const API_KEY_STORAGE_KEY = 'gemini-api-key';
@@ -27,12 +27,33 @@ function checkApiKey() {
 async function initializeChat() {
     const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    chat = model.startChat({
+    const safetySettings = [
+        {
+            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+        },
+        {
+            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+        },
+        {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+        },
+        {
+            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+        }
+    ];
+    const model = genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
         generationConfig: {
             temperature: 0.2,
         },
+        // safetySettings: safetySettings,
     });
+
+    chat = model.startChat();
 }
 
 // Event Listeners
