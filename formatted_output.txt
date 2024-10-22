@@ -1,5 +1,34 @@
 I am working on a simple and quick AI chat web app. Here is the full project:
 
+dump\server.js
+```javascript
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+
+const app = express();
+const PORT = 8000;
+
+app.use(express.static('public'));
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+app.get('/style.css', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'style.css'));
+});
+app.get('/script.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'script.js'));
+});
+app.get('/temp.png', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'temp.png'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Server listening on http://localhost:${PORT}`);
+});
+
+```
+
 public\index.html
 ```html
 <!DOCTYPE html>
@@ -18,6 +47,8 @@ public\index.html
         <div class="modal-content">
             <h2>Welcome</h2>
             <p>Enter your Google Gemini API key:</p>
+            <!-- get it here: https://aistudio.google.com/app -->
+            <p>Get it here: <a href="https://aistudio.google.com/app" target="_blank">https://aistudio.google.com/app</a></p>
             <div class="input-wrapper">
                 <input type="password" id="api-key-input" placeholder=" ">
                 <label for="api-key-input">API Key</label>
@@ -594,7 +625,7 @@ html {
 }
 
 .input-wrapper input {
-    width: 100%;
+    /* width: 100%; */
     padding: 1rem;
     background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
@@ -975,33 +1006,4 @@ button {
 }
 ```
 
-server.js
-```javascript
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
-
-const app = express();
-const PORT = 8000;
-
-app.use(express.static('public'));
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-app.get('/style.css', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'style.css'));
-});
-app.get('/script.js', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'script.js'));
-});
-app.get('/temp.png', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'temp.png'));
-});
-
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
-});
-
-```
-
-I am having an issue when pushing this to my Vercel instance and my domain. I get "Uncaught ReferenceError: require is not defined" in the console. How do I fix this? I searched online and downloaded `require.js` to the public directory.
+This all works well, but I want to add a new feature. When the user clicks on an attachment preview, that item should open itself in fullscreen. This should behave the same for items in the toolbar, or items in the chat. If there are multiple items in an attachments element, there should be left and right buttons on the side to navigate between them. I want you to fully develop and implement this.
