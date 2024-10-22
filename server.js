@@ -15,8 +15,8 @@ app.get('/style.css', (req, res) => {
 app.get('/script.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'script.js'));
 });
-app.get('/temp.jpg', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'temp.jpg'));
+app.get('/temp.png', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'temp.png'));
 });
 
 app.listen(PORT, () => {
