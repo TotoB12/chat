@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TotoB12 Chat</title>
+    <title>Gemini Chat</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
+
 <body>
+    <!-- API Key Modal -->
     <div id="api-key-modal" class="modal">
         <div class="modal-content">
             <h2>Welcome</h2>
@@ -20,54 +23,123 @@
         </div>
     </div>
 
-    <div class="chat-container">
-        <aside class="sidebar">
-            <div class="brand">
-                <h1>Gemini</h1>
-                <button id="clear-key" class="icon-button" title="Clear API Key">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                    </svg>
-                </button>
-            </div>
-        </aside>
+    <!-- Header with Title and Clear Button -->
+    <header class="header">
+        <h1>Gemini</h1>
+        <button id="clear-key" class="icon-button" title="Clear API Key">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+        </button>
+    </header>
 
-        <main class="main-content">
-            <div id="chat-history"></div>
-            
-            <div class="bottom-container">
-                <div id="attachment-previews" class="attachment-previews"></div>
-                
-                <form id="chat-form" class="input-group">
-                    <label for="file-input" class="attach-button" title="Attach files">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                        </svg>
-                    </label>
-                    <input type="file" id="file-input" multiple>
-                    <input type="text" id="message-input" placeholder="Message TotoB12" autocomplete="off">
-                    <button type="submit" class="send-button" title="Send message">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="22" y1="2" x2="11" y2="13"/>
-                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                        </svg>
-                    </button>
-                </form>
-            </div>
-        </main>
+    <!-- Chat Container -->
+    <div class="chat-container">
+        <div id="chat-history"></div>
     </div>
 
+    <!-- Floating Toolbar at the Bottom -->
+    <div class="toolbar">
+        <!-- New Chat Button -->
+        <button id="new-chat" class="icon-button" title="New Chat">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" class="size-6" aria-hidden="true">
+                <path fill="url(#a)"
+                    d="M85.855 18.313A11.574 11.574 0 0 0 74.75 10h-3.379a11.574 11.574 0 0 0-11.384 9.485L54.2 51.018l1.436-4.913a11.574 11.574 0 0 1 11.11-8.327H86.38l8.235 3.207 7.937-3.207h-2.316a11.574 11.574 0 0 1-11.105-8.313z">
+                </path>
+                <path fill="url(#b)"
+                    d="M36.326 101.64A11.574 11.574 0 0 0 47.445 110h7.176c6.276 0 11.409-5.002 11.57-11.277l.781-30.405-1.634 5.583a11.574 11.574 0 0 1-11.108 8.321H34.432l-7.058-3.829-7.641 3.83h2.278c5.154 0 9.687 3.408 11.119 8.36z">
+                </path>
+                <path fill="url(#c)"
+                    d="M74.248 10H34.15c-11.457 0-18.33 15.142-22.913 30.283-5.43 17.939-12.534 41.93 8.02 41.93H36.57c5.174 0 9.716-3.421 11.138-8.396 3.01-10.531 8.286-28.903 12.43-42.889 2.105-7.107 3.86-13.211 6.551-17.012C68.2 11.785 70.715 10 74.248 10">
+                </path>
+                <path fill="url(#d)"
+                    d="M74.248 10H34.15c-11.457 0-18.33 15.142-22.913 30.283-5.43 17.939-12.534 41.93 8.02 41.93H36.57c5.174 0 9.716-3.421 11.138-8.396 3.01-10.531 8.286-28.903 12.43-42.889 2.105-7.107 3.86-13.211 6.551-17.012C68.2 11.785 70.715 10 74.248 10">
+                </path>
+                <path fill="url(#e)"
+                    d="M46.744 110h40.099c11.456 0 18.33-15.144 22.913-30.288 5.429-17.942 12.533-41.937-8.02-41.937H84.422a11.576 11.576 0 0 0-11.138 8.396c-3.01 10.533-8.286 28.909-12.43 42.897-2.106 7.109-3.86 13.214-6.552 17.016-1.51 2.131-4.025 3.916-7.558 3.916">
+                </path>
+                <path fill="url(#f)"
+                    d="M46.744 110h40.099c11.456 0 18.33-15.144 22.913-30.288 5.429-17.942 12.533-41.937-8.02-41.937H84.422a11.576 11.576 0 0 0-11.138 8.396c-3.01 10.533-8.286 28.909-12.43 42.897-2.106 7.109-3.86 13.214-6.552 17.016-1.51 2.131-4.025 3.916-7.558 3.916">
+                </path>
+                <defs>
+                    <radialGradient id="a" cx="0" cy="0" r="1"
+                        gradientTransform="matrix(-27.40125 -33.47302 31.47539 -25.76598 95.512 51.286)"
+                        gradientUnits="userSpaceOnUse">
+                        <stop offset="0.096" stop-color="#00AEFF"></stop>
+                        <stop offset="0.773" stop-color="#2253CE"></stop>
+                        <stop offset="1" stop-color="#0736C4"></stop>
+                    </radialGradient>
+                    <radialGradient id="b" cx="0" cy="0" r="1"
+                        gradientTransform="rotate(51.84 -70.254 70.14)scale(39.9779 38.7796)"
+                        gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#FFB657"></stop>
+                        <stop offset="0.634" stop-color="#FF5F3D"></stop>
+                        <stop offset="0.923" stop-color="#C02B3C"></stop>
+                    </radialGradient>
+                    <radialGradient id="e" cx="0" cy="0" r="1"
+                        gradientTransform="matrix(-31.67773 90.58917 -108.5232 -37.949 103.796 30.703)"
+                        gradientUnits="userSpaceOnUse">
+                        <stop offset="0.066" stop-color="#8C48FF"></stop>
+                        <stop offset="0.5" stop-color="#F2598A"></stop>
+                        <stop offset="0.896" stop-color="#FFB152"></stop>
+                    </radialGradient>
+                    <linearGradient id="c" x1="31.75" x2="37.471" y1="18.75" y2="84.938" gradientUnits="userSpaceOnUse">
+                        <stop offset="0.156" stop-color="#0D91E1"></stop>
+                        <stop offset="0.487" stop-color="#52B471"></stop>
+                        <stop offset="0.652" stop-color="#98BD42"></stop>
+                        <stop offset="0.937" stop-color="#FFC800"></stop>
+                    </linearGradient>
+                    <linearGradient id="d" x1="36.75" x2="39.874" y1="10" y2="82.213" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#3DCBFF"></stop>
+                        <stop offset="0.247" stop-color="#0588F7" stop-opacity="0"></stop>
+                    </linearGradient>
+                    <linearGradient id="f" x1="106.964" x2="106.923" y1="33.365" y2="53.037"
+                        gradientUnits="userSpaceOnUse">
+                        <stop offset="0.058" stop-color="#F8ADFA"></stop>
+                        <stop offset="0.708" stop-color="#A86EDD" stop-opacity="0"></stop>
+                    </linearGradient>
+                </defs>
+            </svg>
+        </button>
+
+        <!-- File Upload -->
+        <button for="file-input" class="icon-button" title="Attach files">
+            <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="size-6">
+                <path
+                    d="M11.7498 3C12.1295 3 12.4434 3.28201 12.4931 3.64808L12.5 3.74985L12.5012 11H19.7543C20.1685 11 20.5043 11.3358 20.5043 11.75C20.5043 12.1297 20.2221 12.4435 19.8561 12.4932L19.7543 12.5H12.5012L12.5032 19.7491C12.5033 20.1633 12.1676 20.4993 11.7534 20.4993C11.3737 20.4993 11.0598 20.2173 11.0101 19.8512L11.0032 19.7494L11.0012 12.5H3.7522C3.33798 12.5 3.0022 12.1642 3.0022 11.75C3.0022 11.3703 3.28435 11.0565 3.65043 11.0068L3.7522 11H11.0012L11 3.75015C10.9999 3.33594 11.3356 3 11.7498 3Z">
+                </path>
+            </svg>
+        </button>
+        <input type="file" id="file-input" multiple>
+
+        <!-- Message Input -->
+        <div class="input-group" id="chat-form">
+            <input type="text" id="message-input" placeholder="Message Gemini" autocomplete="off">
+            <button type="submit" class="send-button" title="Send message">
+                <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" class="size-6">
+                    <path
+                        d="M4.20889 10.7327C3.9232 11.0326 3.93475 11.5074 4.23467 11.7931C4.5346 12.0788 5.00933 12.0672 5.29502 11.7673L11.2495 5.516V20.25C11.2495 20.6642 11.5853 21 11.9995 21C12.4137 21 12.7495 20.6642 12.7495 20.25V5.51565L18.7043 11.7673C18.99 12.0672 19.4648 12.0788 19.7647 11.7931C20.0646 11.5074 20.0762 11.0326 19.7905 10.7327L12.7238 3.31379C12.5627 3.14474 12.3573 3.04477 12.1438 3.01386C12.0971 3.00477 12.0489 3 11.9995 3C11.9498 3 11.9012 3.00483 11.8543 3.01406C11.6412 3.04518 11.4363 3.14509 11.2756 3.31379L4.20889 10.7327Z">
+                    </path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+
+    <!-- Drop Area for File Upload -->
     <div id="drop-area" class="drop-area">
         <div class="drop-area-content">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
             <span>Drop files to attach</span>
         </div>
     </div>
 
+    <!-- Script -->
     <script type="module" src="script.js"></script>
 </body>
+
 </html>

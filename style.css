@@ -1,29 +1,26 @@
 :root {
-    --bg-primary: #1a1b1e;
-    --bg-secondary: #2a2b2e;
-    --bg-tertiary: #3a3b3e;
-    --text-primary: #ffffff;
-    --text-secondary: #a0a0a0;
-    --accent-color: #7c3aed;
-    --accent-hover: #6d28d9;
+    --bg-primary: #101524;    /* App's main color */
+    --bg-secondary: #161c2e;  /* Toolbar background */
+    --bg-tertiary: #0e131f;   /* Input background */
+    --text-primary: #f2ddcc;  /* Response and input text */
+    --text-secondary: #828bac; /* Input placeholder */
+    --send-color: #455172;
+    --send-hover: #505b7b;
+    --accent-hover: #101420;
     --border-color: #404040;
     --error-color: #ef4444;
     --success-color: #10b981;
     --transition-speed: 0.2s;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
-    font-family: 'Space Grotesk', sans-serif;
-    line-height: 1.6;
+    font-family: 'Segoe UI', sans-serif;
     background-color: var(--bg-primary);
     color: var(--text-primary);
     height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Modal Styles */
@@ -90,40 +87,43 @@ body {
     background-color: var(--bg-tertiary);
     padding: 0 0.5rem;
 }
+/* Modal Styles remain the same */
 
-/* Layout */
-.chat-container {
-    display: grid;
-    grid-template-columns: 240px 1fr;
-    height: 100vh;
-}
-
-.sidebar {
-    background-color: var(--bg-secondary);
-    border-right: 1px solid var(--border-color);
-    padding: 1rem;
-}
-
-.brand {
+/* Header Styles */
+.header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: transparent;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color);
+    padding: 1rem;
+    z-index: 100;
 }
 
-.brand h1 {
+.header h1 {
     font-size: 1.25rem;
     font-weight: 600;
+    color: var(--text-primary);
 }
 
-.main-content {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+.header .icon-button {
+    color: var(--text-secondary);
 }
 
-/* Chat History */
+.header .icon-button:hover {
+    color: var(--text-primary);
+}
+
+/* Chat Container */
+.chat-container {
+    flex-grow: 1;
+    padding: 2rem 1rem 0;  /* Add some padding to avoid overlap */
+    overflow-y: auto;
+}
+
 #chat-history {
     flex-grow: 1;
     overflow-y: auto;
@@ -131,12 +131,14 @@ body {
     scroll-behavior: smooth;
 }
 
+/* Message Styles */
 .message {
     display: flex;
     gap: 1rem;
     margin-bottom: 1rem;
     padding: 1rem;
     border-radius: 8px;
+    background-color: var(--bg-secondary);
     animation: fadeIn 0.3s ease-out;
 }
 
@@ -150,7 +152,7 @@ body {
 }
 
 .assistant-message {
-    background-color: var(--bg-tertiary);
+    background-color: var(--bg-secondary);
 }
 
 .error-message {
@@ -171,6 +173,7 @@ body {
 
 .message-content {
     flex-grow: 1;
+    color: var(--text-primary);
 }
 
 .message-content code {
@@ -180,29 +183,36 @@ body {
     font-family: monospace;
 }
 
-/* Input Area */
+/* Toolbar Styles */
 .bottom-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--bg-secondary);
     border-top: 1px solid var(--border-color);
-    padding: 1rem;
+    padding: 0.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.attachment-previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
 }
 
 .input-group {
     display: flex;
     gap: 0.5rem;
     align-items: center;
-    background-color: var(--bg-secondary);
-    padding: 0.5rem;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
+    background-color: var(--bg-tertiary);
+    border-radius: 1.2rem;
 }
 
-#message-input {
-    flex-grow: 1;
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    font-size: 1rem;
-    padding: 0.5rem;
+#message-input::placeholder {
+    color: var(--text-secondary);
 }
 
 #message-input:focus {
@@ -225,7 +235,7 @@ button {
 .icon-button {
     padding: 0.5rem;
     border-radius: 50%;
-    color: var(--text-secondary);
+    color: var(--text-primary);
 }
 
 .icon-button:hover {
@@ -235,7 +245,7 @@ button {
 
 .attach-button {
     padding: 0.5rem;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     cursor: pointer;
 }
 
@@ -243,23 +253,7 @@ button {
     color: var(--text-primary);
 }
 
-.send-button {
-    padding: 0.5rem;
-    color: var(--accent-color);
-}
-
-.send-button:hover {
-    color: var(--accent-hover);
-}
-
 /* Attachment Previews */
-.attachment-previews {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding-bottom: 1rem;
-}
-
 .attachment-preview {
     position: relative;
     border: 1px solid var(--border-color);
@@ -328,11 +322,67 @@ button {
 
 /* Media Queries */
 @media (max-width: 768px) {
-    .chat-container {
-        grid-template-columns: 1fr;
+    .header {
+        padding: 0.5rem;
     }
+    .bottom-container {
+        padding: 0.5rem;
+    }
+}
 
-    .sidebar {
-        display: none;
-    }
+.toolbar .icon-button {
+    width: 2.7rem;
+    height: 2.7rem;
+    color: var(--text-primary);
+    border: none;
+    border-radius: 0.7rem;
+    transition: var(--transition-speed);
+}
+
+.toolbar .icon-button:hover {
+    background-color: var(--accent-hover);
+}
+
+.toolbar .send-button {
+    width: 2rem;
+    height: 2rem;
+    margin: 0.5rem;
+    background-color: var(--send-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+}
+
+.toolbar .send-button:hover {
+    background-color: var(--send-hover);
+}
+
+.toolbar {
+    position: absolute;
+    bottom: 30px;
+    border-radius: 28px;
+    align-self: center;
+    background-color: var(--bg-secondary);
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.toolbar #message-input {
+    font-family: 'Segoe UI', sans-serif;
+    flex-grow: 1;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-left: 0.5rem;
+    padding: 0.5rem;
+}
+
+.toolbar #message-input::placeholder {
+    color: var(--text-secondary);
+}
+
+#file-input {
+    display: none;
 }
