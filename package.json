@@ -16,5 +16,10 @@
   "bugs": {
     "url": "https://github.com/TotoB12/chat/issues"
   },
-  "homepage": "https://github.com/TotoB12/chat#readme"
+  "homepage": "https://github.com/TotoB12/chat#readme",
+  "dependencies": {
+    "express": "^4.21.1",
+    "fs": "*",
+    "path": "^0.12.7"
+  }
 }
