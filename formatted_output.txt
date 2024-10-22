@@ -143,12 +143,13 @@ public\index.html
 
     <div id="fullscreen-viewer" class="fullscreen-viewer">
         <div class="viewer-content">
-            <img id="viewer-image" src="" alt="Full size preview">
+            <img id="viewer-image" src="" alt="Full size preview" />
+            <video id="viewer-video" controls></video>
             <div id="viewer-text" class="viewer-text"></div>
             <button class="viewer-close" title="Close preview">×</button>
             <button class="viewer-nav prev" title="Previous">&lt;</button>
             <button class="viewer-nav next" title="Next">&gt;</button>
-        </div>
+        </div>        
     </div>
 
     <script type="module" src="script.js"></script>
@@ -166,6 +167,8 @@ const API_KEY_STORAGE_KEY = 'gemini-api-key';
 let chat;
 let attachedFiles = [];
 let dragCounter = 0;
+let currentFileIndex = 0;
+let currentFiles = [];
 
 // DOM Elements
 const apiKeyModal = document.getElementById('api-key-modal');
@@ -180,14 +183,12 @@ const fileInput = document.getElementById('file-input');
 const dropArea = document.getElementById('drop-area');
 const uploadButton = document.getElementById('upload-button');
 const attachmentPreviewsContainer = document.querySelector('.attachment-previews');
-
 const fullscreenViewer = document.getElementById('fullscreen-viewer');
 const viewerImage = document.getElementById('viewer-image');
 const viewerText = document.getElementById('viewer-text');
+const viewerVideo = document.getElementById('viewer-video');
 const prevButton = document.querySelector('.viewer-nav.prev');
 const nextButton = document.querySelector('.viewer-nav.next');
-let currentFileIndex = 0;
-let currentFiles = [];
 
 // Initialize Gemini Chat
 async function initializeChat() {
@@ -342,7 +343,11 @@ async function handleSubmit() {
 
 function handleFiles(files) {
     for (const file of files) {
-        if (file.type.startsWith('image/') || file.type.startsWith('text/')) {
+        if (
+            file.type.startsWith('image/') ||
+            file.type.startsWith('text/') ||
+            file.type.startsWith('video/')
+        ) {
             attachedFiles.push(file);
             displayAttachmentPreview(file);
         }
@@ -358,7 +363,7 @@ function displayAttachmentPreview(file) {
     removeBtn.textContent = '×';
     removeBtn.onclick = (e) => {
         e.stopPropagation(); // Prevent the click from triggering the preview
-        attachedFiles = attachedFiles.filter(f => f !== file);
+        attachedFiles = attachedFiles.filter((f) => f !== file);
         previewContainer.remove();
     };
 
@@ -366,6 +371,14 @@ function displayAttachmentPreview(file) {
         const img = document.createElement('img');
         img.src = URL.createObjectURL(file);
         previewContainer.appendChild(img);
+    } else if (file.type.startsWith('video/')) {
+        const videoIcon = document.createElement('div');
+        videoIcon.className = 'video-icon';
+        videoIcon.innerHTML = '🎥'; // Or use an actual video icon
+        const fileName = document.createElement('div');
+        fileName.textContent = file.name;
+        previewContainer.appendChild(videoIcon);
+        previewContainer.appendChild(fileName);
     } else {
         const fileInfo = document.createElement('div');
         fileInfo.textContent = file.name;
@@ -373,7 +386,8 @@ function displayAttachmentPreview(file) {
     }
 
     previewContainer.appendChild(removeBtn);
-    previewContainer.onclick = () => openFullscreenViewer(attachedFiles, attachedFiles.indexOf(file));
+    previewContainer.onclick = () =>
+        openFullscreenViewer(attachedFiles, attachedFiles.indexOf(file));
     attachmentPreviewsContainer.appendChild(previewContainer);
 }
 
@@ -549,22 +563,30 @@ function closeFullscreenViewer() {
     fullscreenViewer.style.display = 'none';
     document.body.style.overflow = '';
     viewerImage.src = '';
+    viewerVideo.src = '';
     viewerText.textContent = '';
 }
 
 function updateViewer() {
     const file = currentFiles[currentFileIndex];
-    
+
     // Update navigation buttons visibility
     prevButton.classList.toggle('hidden', currentFileIndex === 0);
     nextButton.classList.toggle('hidden', currentFileIndex === currentFiles.length - 1);
-    
+
     if (file.type.startsWith('image/')) {
         viewerImage.style.display = 'block';
+        viewerVideo.style.display = 'none';
         viewerText.style.display = 'none';
         viewerImage.src = URL.createObjectURL(file);
+    } else if (file.type.startsWith('video/')) {
+        viewerVideo.style.display = 'block';
+        viewerImage.style.display = 'none';
+        viewerText.style.display = 'none';
+        viewerVideo.src = URL.createObjectURL(file);
     } else {
         viewerImage.style.display = 'none';
+        viewerVideo.style.display = 'none';
         viewerText.style.display = 'block';
         viewerText.textContent = file.name;
     }
@@ -1146,4 +1168,86 @@ button {
 }
 ```
 
-This all works well, but I now want to ensure that video uploads work. Right now, if I select or drag&drop a video file in my app, nothing happens. I need the file to be properly accepted. I want you to fully develop and implement this.
+This all works well, but there is an issue. When the script attemtps to check the current state of an uploading file, I get this in console:
+
+```
+Processing file 2021-03-18 18.21.51.mov, please wait...
+index.html:1  Access to fetch at 'https://generativelanguage.googleapis.com/v1beta/files/files/z79yd8xm3t0t?key=AIzaSyANLHNbx7NB-TdZNFOvC6wGeansdC8ijSI' from origin 'http://127.0.0.1:5500' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
+script.js:297 
+        
+        
+        GET https://generativelanguage.googleapis.com/v1beta/files/files/z79yd8xm3t0t?key=AIzaSyANLHNbx7NB-TdZNFOvC6wGeansdC8ijSI net::ERR_FAILED 404 (Not Found)
+uploadFile @ script.js:297
+await in uploadFile
+processAttachedFiles @ script.js:235
+handleSubmit @ script.js:154
+(anonymous) @ script.js:123
+script.js:175  TypeError: Failed to fetch
+    at uploadFile (script.js:297:42)
+    at async processAttachedFiles (script.js:235:25)
+    at async handleSubmit (script.js:154:27)
+```
+
+Here is what the documentation says:
+
+```shell
+MIME_TYPE=$(file -b --mime-type "${VIDEO_PATH}")
+NUM_BYTES=$(wc -c < "${VIDEO_PATH}")
+DISPLAY_NAME=VIDEO_PATH
+
+# Initial resumable request defining metadata.
+# The upload url is in the response headers dump them to a file.
+curl "${BASE_URL}/upload/v1beta/files?key=${GOOGLE_API_KEY}" \
+  -D upload-header.tmp \
+  -H "X-Goog-Upload-Protocol: resumable" \
+  -H "X-Goog-Upload-Command: start" \
+  -H "X-Goog-Upload-Header-Content-Length: ${NUM_BYTES}" \
+  -H "X-Goog-Upload-Header-Content-Type: ${MIME_TYPE}" \
+  -H "Content-Type: application/json" \
+  -d "{'file': {'display_name': '${DISPLAY_NAME}'}}" 2> /dev/null
+
+upload_url=$(grep -i "x-goog-upload-url: " "${tmp_header_file}" | cut -d" " -f2 | tr -d "\r")
+rm "${tmp_header_file}"
+
+# Upload the actual bytes.
+curl "${upload_url}" \
+  -H "Content-Length: ${NUM_BYTES}" \
+  -H "X-Goog-Upload-Offset: 0" \
+  -H "X-Goog-Upload-Command: upload, finalize" \
+  --data-binary "@${VIDEO_PATH}" 2> /dev/null > file_info.json
+
+file_uri=$(jq ".file.uri" file_info.json)
+echo file_uri=$file_uri
+
+state=$(jq ".file.state" file_info.json)
+echo state=$state
+
+# Ensure the state of the video is 'ACTIVE'
+while [[ "($state)" = *"PROCESSING"* ]];
+do
+  echo "Processing video..."
+  sleep 5
+  # Get the file of interest to check state
+  curl https://generativelanguage.googleapis.com/v1beta/files/$name > file_info.json
+  state=$(jq ".file.state" file_info.json)
+done
+
+# Now generate content using that file
+curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$GOOGLE_API_KEY" \
+    -H 'Content-Type: application/json' \
+    -X POST \
+    -d '{
+      "contents": [{
+        "parts":[
+          {"text": "Describe this video clip"},
+          {"file_data":{"mime_type": "video/mp4", "file_uri": '$file_uri'}}]
+        }]
+       }' 2> /dev/null > response.json
+
+cat response.json
+echo
+
+jq ".candidates[].content.parts[].text" response.json
+```
+
+I want you to fully develop and fix this.
