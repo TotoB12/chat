@@ -1,4 +1,5 @@
 :root {
+    --white: #ffffff;
     --bg-primary: #101524;
     --bg-secondary: #161c2e;
     --bg-tertiary: #0e131f;
@@ -201,17 +202,16 @@ body {
 
 .attachment-previews {
     display: flex;
-    flex-wrap: wrap;
+    overflow-x: auto;
     gap: 0.5rem;
-    padding-bottom: 0.5rem;
 }
 
 .input-group {
     display: flex;
-    gap: 0.5rem;
-    align-items: center;
+    flex-direction: column;
     background-color: var(--bg-tertiary);
     border-radius: 1.2rem;
+    padding: 0 0.5rem;
 }
 
 #message-input::placeholder {
@@ -220,6 +220,12 @@ body {
 
 #message-input:focus {
     outline: none;
+}
+
+.message-input-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 #file-input {
@@ -256,41 +262,53 @@ button {
 }
 
 .attachment-preview {
+    margin-top: 0.5rem;
+    flex: 0 0 auto;
+    height: 150px;
     position: relative;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 0.5rem;
+    border-radius: 0.7rem;
     background-color: var(--bg-secondary);
+    display: flex;
+    margin-bottom: 0.2rem;
+    align-items: center;
+    justify-content: center;
 }
 
 .attachment-preview img {
-    max-width: 80px;
-    max-height: 80px;
-    border-radius: 4px;
+    max-width: 100%;
+    min-width: 150px;
+    max-height: 100%;
+    border-radius: 0.7rem;
 }
 
 .attachment-preview div {
-    max-width: 80px;
+    max-width: 100%;
+    max-height: 100%;
     word-wrap: break-word;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
 }
 
 .remove-attachment {
     position: absolute;
-    top: -0.5rem;
-    right: -0.5rem;
+    top: 2px;
+    right: 2px;
     background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     padding: 0;
+    cursor: pointer;
 }
 
 .remove-attachment:hover {
@@ -373,7 +391,7 @@ button {
     flex-grow: 1;
     background: none;
     border: none;
-    color: var(--text-primary);
+    color: var(--white);
     font-size: 1rem;
     margin-left: 0.5rem;
     padding: 0.5rem;

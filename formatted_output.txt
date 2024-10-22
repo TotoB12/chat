@@ -99,6 +99,7 @@ index.html
                     </linearGradient>
                 </defs>
             </svg>
+            <!-- <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M21 12C21 16.9706 16.9706 21 12 21C9.69494 21 7.59227 20.1334 6 18.7083L3 16M3 12C3 7.02944 7.02944 3 12 3C14.3051 3 16.4077 3.86656 18 5.29168L21 8M3 21V16M3 16H8M21 3V8M21 8H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg> -->
         </button>
 
         <button for="file-input" class="icon-button" id="upload-button" title="Attach files">
@@ -111,6 +112,8 @@ index.html
         <input type="file" id="file-input" multiple>
 
         <div class="input-group" id="chat-form">
+            <div class="attachment-previews"></div>
+            <div class="message-input-container">
             <input type="text" id="message-input" placeholder="Message TotoB12" autocomplete="off">
             <button type="submit" class="send-button" title="Send message">
                 <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" class="size-6">
@@ -119,6 +122,7 @@ index.html
                     </path>
                 </svg>
             </button>
+            </div>
         </div>
     </div>
 
@@ -162,6 +166,7 @@ const chatHistory = document.getElementById('chat-history');
 const fileInput = document.getElementById('file-input');
 const dropArea = document.getElementById('drop-area');
 const uploadButton = document.getElementById('upload-button');
+const attachmentPreviewsContainer = document.querySelector('.attachment-previews');
 
 // Initialize Gemini Chat
 async function initializeChat() {
@@ -341,7 +346,7 @@ function displayAttachmentPreview(file) {
     }
 
     previewContainer.appendChild(removeBtn);
-    messageInput.parentElement.insertBefore(previewContainer, messageInput);
+    attachmentPreviewsContainer.appendChild(previewContainer);
 }
 
 async function processAttachedFiles() {
@@ -538,6 +543,7 @@ app.listen(PORT, () => {
 style.css
 ```css
 :root {
+    --white: #ffffff;
     --bg-primary: #101524;
     --bg-secondary: #161c2e;
     --bg-tertiary: #0e131f;
@@ -740,17 +746,16 @@ body {
 
 .attachment-previews {
     display: flex;
-    flex-wrap: wrap;
+    overflow-x: auto;
     gap: 0.5rem;
-    padding-bottom: 0.5rem;
 }
 
 .input-group {
     display: flex;
-    gap: 0.5rem;
-    align-items: center;
+    flex-direction: column;
     background-color: var(--bg-tertiary);
     border-radius: 1.2rem;
+    padding: 0 0.5rem;
 }
 
 #message-input::placeholder {
@@ -759,6 +764,12 @@ body {
 
 #message-input:focus {
     outline: none;
+}
+
+.message-input-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 #file-input {
@@ -795,41 +806,53 @@ button {
 }
 
 .attachment-preview {
+    margin-top: 0.5rem;
+    flex: 0 0 auto;
+    height: 150px;
     position: relative;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 0.5rem;
+    border-radius: 0.7rem;
     background-color: var(--bg-secondary);
+    display: flex;
+    margin-bottom: 0.2rem;
+    align-items: center;
+    justify-content: center;
 }
 
 .attachment-preview img {
-    max-width: 80px;
-    max-height: 80px;
-    border-radius: 4px;
+    max-width: 100%;
+    min-width: 150px;
+    max-height: 100%;
+    border-radius: 0.7rem;
 }
 
 .attachment-preview div {
-    max-width: 80px;
+    max-width: 100%;
+    max-height: 100%;
     word-wrap: break-word;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
 }
 
 .remove-attachment {
     position: absolute;
-    top: -0.5rem;
-    right: -0.5rem;
+    top: 2px;
+    right: 2px;
     background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     padding: 0;
+    cursor: pointer;
 }
 
 .remove-attachment:hover {
@@ -912,7 +935,7 @@ button {
     flex-grow: 1;
     background: none;
     border: none;
-    color: var(--text-primary);
+    color: var(--white);
     font-size: 1rem;
     margin-left: 0.5rem;
     padding: 0.5rem;
@@ -927,4 +950,3 @@ button {
 }
 ```
 
-This all works great, but I need to change how the uploaded items preview looks on the page. The previews should still be inside the input group, but should be on a level above the input and the submit button. All the previews should have the same fixed height. Since a user can upload a lot of items, the container for them should be scrollable sideways. I want you to fully develop and implement this.

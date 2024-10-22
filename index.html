@@ -95,6 +95,7 @@
                     </linearGradient>
                 </defs>
             </svg>
+            <!-- <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M21 12C21 16.9706 16.9706 21 12 21C9.69494 21 7.59227 20.1334 6 18.7083L3 16M3 12C3 7.02944 7.02944 3 12 3C14.3051 3 16.4077 3.86656 18 5.29168L21 8M3 21V16M3 16H8M21 3V8M21 8H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg> -->
         </button>
 
         <button for="file-input" class="icon-button" id="upload-button" title="Attach files">
@@ -107,6 +108,8 @@
         <input type="file" id="file-input" multiple>
 
         <div class="input-group" id="chat-form">
+            <div class="attachment-previews"></div>
+            <div class="message-input-container">
             <input type="text" id="message-input" placeholder="Message TotoB12" autocomplete="off">
             <button type="submit" class="send-button" title="Send message">
                 <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" class="size-6">
@@ -115,6 +118,7 @@
                     </path>
                 </svg>
             </button>
+            </div>
         </div>
     </div>
 

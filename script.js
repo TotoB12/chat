@@ -18,6 +18,7 @@ const chatHistory = document.getElementById('chat-history');
 const fileInput = document.getElementById('file-input');
 const dropArea = document.getElementById('drop-area');
 const uploadButton = document.getElementById('upload-button');
+const attachmentPreviewsContainer = document.querySelector('.attachment-previews');
 
 // Initialize Gemini Chat
 async function initializeChat() {
@@ -197,7 +198,7 @@ function displayAttachmentPreview(file) {
     }
 
     previewContainer.appendChild(removeBtn);
-    messageInput.parentElement.insertBefore(previewContainer, messageInput);
+    attachmentPreviewsContainer.appendChild(previewContainer);
 }
 
 async function processAttachedFiles() {
