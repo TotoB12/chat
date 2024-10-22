@@ -5,6 +5,8 @@ const API_KEY_STORAGE_KEY = 'gemini-api-key';
 let chat;
 let attachedFiles = [];
 let dragCounter = 0;
+let currentFileIndex = 0;
+let currentFiles = [];
 
 // DOM Elements
 const apiKeyModal = document.getElementById('api-key-modal');
@@ -19,6 +21,12 @@ const fileInput = document.getElementById('file-input');
 const dropArea = document.getElementById('drop-area');
 const uploadButton = document.getElementById('upload-button');
 const attachmentPreviewsContainer = document.querySelector('.attachment-previews');
+const fullscreenViewer = document.getElementById('fullscreen-viewer');
+const viewerImage = document.getElementById('viewer-image');
+const viewerText = document.getElementById('viewer-text');
+const viewerVideo = document.getElementById('viewer-video');
+const prevButton = document.querySelector('.viewer-nav.prev');
+const nextButton = document.querySelector('.viewer-nav.next');
 
 // Initialize Gemini Chat
 async function initializeChat() {
@@ -173,7 +181,11 @@ async function handleSubmit() {
 
 function handleFiles(files) {
     for (const file of files) {
-        if (file.type.startsWith('image/') || file.type.startsWith('text/')) {
+        if (
+            file.type.startsWith('image/') ||
+            file.type.startsWith('text/') ||
+            file.type.startsWith('video/')
+        ) {
             attachedFiles.push(file);
             displayAttachmentPreview(file);
         }
@@ -187,8 +199,9 @@ function displayAttachmentPreview(file) {
     const removeBtn = document.createElement('button');
     removeBtn.className = 'remove-attachment';
     removeBtn.textContent = '×';
-    removeBtn.onclick = () => {
-        attachedFiles = attachedFiles.filter(f => f !== file);
+    removeBtn.onclick = (e) => {
+        e.stopPropagation(); // Prevent the click from triggering the preview
+        attachedFiles = attachedFiles.filter((f) => f !== file);
         previewContainer.remove();
     };
 
@@ -196,6 +209,14 @@ function displayAttachmentPreview(file) {
         const img = document.createElement('img');
         img.src = URL.createObjectURL(file);
         previewContainer.appendChild(img);
+    } else if (file.type.startsWith('video/')) {
+        const videoIcon = document.createElement('div');
+        videoIcon.className = 'video-icon';
+        videoIcon.innerHTML = '🎥'; // Or use an actual video icon
+        const fileName = document.createElement('div');
+        fileName.textContent = file.name;
+        previewContainer.appendChild(videoIcon);
+        previewContainer.appendChild(fileName);
     } else {
         const fileInfo = document.createElement('div');
         fileInfo.textContent = file.name;
@@ -203,6 +224,8 @@ function displayAttachmentPreview(file) {
     }
 
     previewContainer.appendChild(removeBtn);
+    previewContainer.onclick = () =>
+        openFullscreenViewer(attachedFiles, attachedFiles.indexOf(file));
     attachmentPreviewsContainer.appendChild(previewContainer);
 }
 
@@ -297,7 +320,7 @@ function addMessageToChat(role, content, attachments = []) {
         const attachmentsDiv = document.createElement('div');
         attachmentsDiv.className = 'message-attachments';
 
-        attachments.forEach(file => {
+        attachments.forEach((file, index) => {
             const previewContainer = document.createElement('div');
             previewContainer.className = 'attachment-preview';
 
@@ -311,10 +334,10 @@ function addMessageToChat(role, content, attachments = []) {
                 previewContainer.appendChild(fileInfo);
             }
 
+            previewContainer.onclick = () => openFullscreenViewer(attachments, index);
             attachmentsDiv.appendChild(previewContainer);
         });
 
-        // messageDiv.appendChild(attachmentsDiv);
         chatHistory.appendChild(attachmentsDiv);
     }
 
@@ -366,3 +389,71 @@ dropArea.addEventListener('drop', (e) => {
     dragCounter = 0;
 });
 
+function openFullscreenViewer(files, startIndex = 0) {
+    currentFiles = files;
+    currentFileIndex = startIndex;
+    updateViewer();
+    fullscreenViewer.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeFullscreenViewer() {
+    fullscreenViewer.style.display = 'none';
+    document.body.style.overflow = '';
+    viewerImage.src = '';
+    viewerVideo.src = '';
+    viewerText.textContent = '';
+}
+
+function updateViewer() {
+    const file = currentFiles[currentFileIndex];
+
+    // Update navigation buttons visibility
+    prevButton.classList.toggle('hidden', currentFileIndex === 0);
+    nextButton.classList.toggle('hidden', currentFileIndex === currentFiles.length - 1);
+
+    if (file.type.startsWith('image/')) {
+        viewerImage.style.display = 'block';
+        viewerVideo.style.display = 'none';
+        viewerText.style.display = 'none';
+        viewerImage.src = URL.createObjectURL(file);
+    } else if (file.type.startsWith('video/')) {
+        viewerVideo.style.display = 'block';
+        viewerImage.style.display = 'none';
+        viewerText.style.display = 'none';
+        viewerVideo.src = URL.createObjectURL(file);
+    } else {
+        viewerImage.style.display = 'none';
+        viewerVideo.style.display = 'none';
+        viewerText.style.display = 'block';
+        viewerText.textContent = file.name;
+    }
+}
+
+function navigateViewer(direction) {
+    const newIndex = currentFileIndex + direction;
+    if (newIndex >= 0 && newIndex < currentFiles.length) {
+        currentFileIndex = newIndex;
+        updateViewer();
+    }
+}
+
+fullscreenViewer.querySelector('.viewer-close').addEventListener('click', closeFullscreenViewer);
+prevButton.addEventListener('click', () => navigateViewer(-1));
+nextButton.addEventListener('click', () => navigateViewer(1));
+
+document.addEventListener('keydown', (e) => {
+    if (fullscreenViewer.style.display === 'block') {
+        switch (e.key) {
+            case 'Escape':
+                closeFullscreenViewer();
+                break;
+            case 'ArrowLeft':
+                navigateViewer(-1);
+                break;
+            case 'ArrowRight':
+                navigateViewer(1);
+                break;
+        }
+    }
+});
