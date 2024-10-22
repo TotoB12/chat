@@ -432,20 +432,14 @@ async function uploadFile(file) {
     return fileUri;
 }
 
-// Helper Functions
 function addMessageToChat(role, content) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${role}-message`;
-
-    const iconDiv = document.createElement('div');
-    iconDiv.className = 'message-icon';
-    iconDiv.textContent = role === 'user' ? '👤' : '🤖';
 
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
     contentDiv.innerHTML = role === 'error' ? content : marked.parse(content);
 
-    messageDiv.appendChild(iconDiv);
     messageDiv.appendChild(contentDiv);
     chatHistory.appendChild(messageDiv);
     scrollToBottom();
@@ -552,6 +546,7 @@ style.css
     --send-color: #455172;
     --send-hover: #505b7b;
     --accent-hover: #101420;
+    --user-message: #1d2439;
     --border-color: #404040;
     --error-color: #ef4444;
     --success-color: #10b981;
@@ -560,6 +555,8 @@ style.css
 
 body {
     font-family: 'Segoe UI', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 500;
     background-color: var(--bg-primary);
     color: var(--text-primary);
     height: 100vh;
@@ -665,6 +662,8 @@ body {
     overflow-y: auto;
     width: 800px;
     align-self: center;
+    display: flex;
+    flex-direction: column;
 }
 
 #chat-history {
@@ -675,13 +674,11 @@ body {
 }
 
 .message {
-    display: flex;
-    gap: 1rem;
+    max-width: 70%;
+    width: fit-content;
     margin-bottom: 1rem;
-    padding: 1rem;
-    border-radius: 8px;
-    background-color: var(--bg-secondary);
     animation: fadeIn 0.3s ease-out;
+    border-radius: 1rem;
 }
 
 @keyframes fadeIn {
@@ -697,11 +694,17 @@ body {
 }
 
 .user-message {
-    background-color: var(--bg-secondary);
+    background-color: var(--user-message);
+    color: var(--text-primary);
+    margin-left: auto;
+    padding: 1px 1rem;
 }
 
 .assistant-message {
-    background-color: var(--bg-secondary);
+    background-color: transparent;
+    color: var(--text-primary);
+    margin-right: auto;
+    padding: 1px 1rem;
 }
 
 .error-message {
@@ -709,19 +712,9 @@ body {
     color: var(--error-color);
 }
 
-.message-icon {
-    width: 2rem;
-    height: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--accent-color);
-    border-radius: 50%;
-    font-size: 1rem;
-}
-
 .message-content {
     flex-grow: 1;
+    margin: 0 0.4rem;
     color: var(--text-primary);
 }
 
@@ -822,7 +815,7 @@ button {
 
 .attachment-preview img {
     max-width: 100%;
-    min-width: 150px;
+    /* min-width: 150px; */
     max-height: 100%;
     border-radius: 0.7rem;
 }
@@ -953,4 +946,4 @@ button {
 }
 ```
 
-This all works, but I want to redesign how the chat is displayed. No messages should have a "message-icon". Only the user messages should have a background. The user's messages should be displayed alligned to the right, and the assistant's on the left. I want you to fully develop and implement this.
+This all works great, but I now want to enhance the user experience. When an image is uploaded and sent, it should be removed from the current input field, and the previews should be removed from the toolbar. Above the added user message, that same preview should be shown to show what files are attached to what messages. I want you to fully develop and implement this.

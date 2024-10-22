@@ -8,6 +8,7 @@
     --send-color: #455172;
     --send-hover: #505b7b;
     --accent-hover: #101420;
+    --user-message: #1d2439;
     --border-color: #404040;
     --error-color: #ef4444;
     --success-color: #10b981;
@@ -16,12 +17,23 @@
 
 body {
     font-family: 'Segoe UI', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 500;
     background-color: var(--bg-primary);
     color: var(--text-primary);
     height: 100vh;
     margin: 0;
     display: flex;
     flex-direction: column;
+}
+
+html {
+    overflow: scroll;
+}
+
+::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
 }
 
 .modal {
@@ -95,7 +107,7 @@ body {
     right: 0;
     background-color: transparent;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     padding: 1rem;
     z-index: 100;
@@ -117,10 +129,12 @@ body {
 
 .chat-container {
     flex-grow: 1;
-    padding: 2rem 1rem 0;
+    padding: 0 1rem;
     overflow-y: auto;
     width: 800px;
     align-self: center;
+    display: flex;
+    flex-direction: column;
 }
 
 #chat-history {
@@ -128,16 +142,14 @@ body {
     overflow-y: auto;
     padding: 1rem;
     scroll-behavior: smooth;
+    padding: 10rem 0;
 }
 
 .message {
-    display: flex;
-    gap: 1rem;
+    width: fit-content;
     margin-bottom: 1rem;
-    padding: 1rem;
-    border-radius: 8px;
-    background-color: var(--bg-secondary);
     animation: fadeIn 0.3s ease-out;
+    border-radius: 1rem;
 }
 
 @keyframes fadeIn {
@@ -153,31 +165,63 @@ body {
 }
 
 .user-message {
-    background-color: var(--bg-secondary);
+    background-color: var(--user-message);
+    color: var(--text-primary);
+    margin-left: auto;
+    padding: 1px 1rem;
 }
 
 .assistant-message {
+    background-color: transparent;
+    color: var(--text-primary);
+    margin-right: auto;
+    padding: 1px 1rem;
+}
+
+.message-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row-reverse;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.message-attachments .attachment-preview {
+    position: relative;
+    max-height: 150px;
+    border: 1px solid var(--border-color);
+    border-radius: 0.7rem;
     background-color: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.message-attachments .attachment-preview img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.message-attachments .attachment-preview div {
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.message-attachments .remove-attachment {
+    display: none;
 }
 
 .error-message {
     background-color: rgba(239, 68, 68, 0.1);
     color: var(--error-color);
-}
-
-.message-icon {
-    width: 2rem;
-    height: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--accent-color);
-    border-radius: 50%;
-    font-size: 1rem;
+    padding: 10px;
 }
 
 .message-content {
     flex-grow: 1;
+    margin: 0 0.4rem;
     color: var(--text-primary);
 }
 
@@ -278,7 +322,7 @@ button {
 
 .attachment-preview img {
     max-width: 100%;
-    min-width: 150px;
+    /* min-width: 150px; */
     max-height: 100%;
     border-radius: 0.7rem;
 }
