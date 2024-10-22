@@ -921,4 +921,4 @@ button {
 }
 ```
 
-It used to work just fine, but I've made a lot of changes recently to the UI and HTML, that many features such as uploading and sending messages no longer work, and all of the CSS is all over the place. I want you to fully restore all of the coded functionalities, and clean up the files entirely. I need the HTML to still use a normal DIV for the input and a button for the upload: it should all be handled in JavaScript. Return me the full scripts.
+It used to work just fine, but I've made a lot of changes recently to the UI and HTML, that many features such as uploading and sending messages no longer work, and all of the CSS is all over the place. I want you to fully restore all of the coded functionalities, and clean up the files entirely. I do not want the HTML to change: the upload button should remain a button, it should all be handled in JavaScript along the message sending (either by the button or by pressing "enter"). Return me the full scripts.
