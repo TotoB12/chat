@@ -450,27 +450,24 @@ async function uploadFile(file) {
     const fileName = fileInfo.file.name;
     let fileState = fileInfo.file.state;
 
-    // Ensure the file state is ACTIVE
     while (fileState === 'PROCESSING') {
         console.log(`Processing file ${file.name}, please wait...`);
-        await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
-        // Fetch the file info again
-        const fileStatusResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/files/${fileName}?key=${apiKey}`);
+        const fileStatusResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`);
 
         if (!fileStatusResponse.ok) {
             throw new Error('Failed to fetch file status.');
         }
 
         const fileStatusInfo = await fileStatusResponse.json();
-        fileState = fileStatusInfo.file.state;
+        fileState = fileStatusInfo.state;
     }
 
     if (fileState !== 'ACTIVE') {
         throw new Error(`File ${file.name} is not active.`);
     }
 
-    // Return the file URI to be used in the message parts
     return fileUri;
 }
 
@@ -1109,6 +1106,15 @@ button {
     border-radius: 1rem;
     max-width: 80%;
     word-break: break-word;
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+}
+
+#viewer-video {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
 }
 
 .viewer-close {
@@ -1168,86 +1174,3 @@ button {
 }
 ```
 
-This all works well, but there is an issue. When the script attemtps to check the current state of an uploading file, I get this in console:
-
-```
-Processing file 2021-03-18 18.21.51.mov, please wait...
-index.html:1  Access to fetch at 'https://generativelanguage.googleapis.com/v1beta/files/files/z79yd8xm3t0t?key=AIzaSyANLHNbx7NB-TdZNFOvC6wGeansdC8ijSI' from origin 'http://127.0.0.1:5500' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
-script.js:297 
-        
-        
-        GET https://generativelanguage.googleapis.com/v1beta/files/files/z79yd8xm3t0t?key=AIzaSyANLHNbx7NB-TdZNFOvC6wGeansdC8ijSI net::ERR_FAILED 404 (Not Found)
-uploadFile @ script.js:297
-await in uploadFile
-processAttachedFiles @ script.js:235
-handleSubmit @ script.js:154
-(anonymous) @ script.js:123
-script.js:175  TypeError: Failed to fetch
-    at uploadFile (script.js:297:42)
-    at async processAttachedFiles (script.js:235:25)
-    at async handleSubmit (script.js:154:27)
-```
-
-Here is what the documentation says:
-
-```shell
-MIME_TYPE=$(file -b --mime-type "${VIDEO_PATH}")
-NUM_BYTES=$(wc -c < "${VIDEO_PATH}")
-DISPLAY_NAME=VIDEO_PATH
-
-# Initial resumable request defining metadata.
-# The upload url is in the response headers dump them to a file.
-curl "${BASE_URL}/upload/v1beta/files?key=${GOOGLE_API_KEY}" \
-  -D upload-header.tmp \
-  -H "X-Goog-Upload-Protocol: resumable" \
-  -H "X-Goog-Upload-Command: start" \
-  -H "X-Goog-Upload-Header-Content-Length: ${NUM_BYTES}" \
-  -H "X-Goog-Upload-Header-Content-Type: ${MIME_TYPE}" \
-  -H "Content-Type: application/json" \
-  -d "{'file': {'display_name': '${DISPLAY_NAME}'}}" 2> /dev/null
-
-upload_url=$(grep -i "x-goog-upload-url: " "${tmp_header_file}" | cut -d" " -f2 | tr -d "\r")
-rm "${tmp_header_file}"
-
-# Upload the actual bytes.
-curl "${upload_url}" \
-  -H "Content-Length: ${NUM_BYTES}" \
-  -H "X-Goog-Upload-Offset: 0" \
-  -H "X-Goog-Upload-Command: upload, finalize" \
-  --data-binary "@${VIDEO_PATH}" 2> /dev/null > file_info.json
-
-file_uri=$(jq ".file.uri" file_info.json)
-echo file_uri=$file_uri
-
-state=$(jq ".file.state" file_info.json)
-echo state=$state
-
-# Ensure the state of the video is 'ACTIVE'
-while [[ "($state)" = *"PROCESSING"* ]];
-do
-  echo "Processing video..."
-  sleep 5
-  # Get the file of interest to check state
-  curl https://generativelanguage.googleapis.com/v1beta/files/$name > file_info.json
-  state=$(jq ".file.state" file_info.json)
-done
-
-# Now generate content using that file
-curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$GOOGLE_API_KEY" \
-    -H 'Content-Type: application/json' \
-    -X POST \
-    -d '{
-      "contents": [{
-        "parts":[
-          {"text": "Describe this video clip"},
-          {"file_data":{"mime_type": "video/mp4", "file_uri": '$file_uri'}}]
-        }]
-       }' 2> /dev/null > response.json
-
-cat response.json
-echo
-
-jq ".candidates[].content.parts[].text" response.json
-```
-
-I want you to fully develop and fix this.

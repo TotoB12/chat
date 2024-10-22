@@ -288,27 +288,24 @@ async function uploadFile(file) {
     const fileName = fileInfo.file.name;
     let fileState = fileInfo.file.state;
 
-    // Ensure the file state is ACTIVE
     while (fileState === 'PROCESSING') {
         console.log(`Processing file ${file.name}, please wait...`);
-        await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
-        // Fetch the file info again
-        const fileStatusResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/files/${fileName}?key=${apiKey}`);
+        const fileStatusResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`);
 
         if (!fileStatusResponse.ok) {
             throw new Error('Failed to fetch file status.');
         }
 
         const fileStatusInfo = await fileStatusResponse.json();
-        fileState = fileStatusInfo.file.state;
+        fileState = fileStatusInfo.state;
     }
 
     if (fileState !== 'ACTIVE') {
         throw new Error(`File ${file.name} is not active.`);
     }
 
-    // Return the file URI to be used in the message parts
     return fileUri;
 }
 

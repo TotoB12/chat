@@ -484,6 +484,15 @@ button {
     border-radius: 1rem;
     max-width: 80%;
     word-break: break-word;
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+}
+
+#viewer-video {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
 }
 
 .viewer-close {
