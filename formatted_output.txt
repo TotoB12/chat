@@ -28,14 +28,22 @@ index.html
         </header>
         
         <div id="chat-history"></div>
-        
-        <div class="input-container">
-            <form id="chat-form">
-                <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off">
-                <button type="submit">Send</button>
-            </form>
-        </div>
     </div>
+
+    <div id="attachment-previews" class="attachment-previews"></div>
+
+    <div class="input-container">
+        <form id="chat-form">
+            <!-- Attachment Icon -->
+            <label for="file-input" class="attachment-icon">📎</label>
+            <input type="file" id="file-input" multiple style="display: none;">
+            <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off">
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <!-- Drag and Drop Area -->
+    <div id="drop-area" class="drop-area">Drop files here</div>
 
     <script type="module" src="script.js"></script>
 </body>
@@ -49,6 +57,7 @@ import { marked } from "https://esm.run/marked";
 
 const API_KEY_STORAGE_KEY = 'gemini-api-key';
 let chat;
+let attachedFiles = [];
 
 // DOM Elements
 const apiKeyModal = document.getElementById('api-key-modal');
@@ -58,6 +67,9 @@ const clearKeyBtn = document.getElementById('clear-key');
 const chatForm = document.getElementById('chat-form');
 const messageInput = document.getElementById('message-input');
 const chatHistory = document.getElementById('chat-history');
+const fileInput = document.getElementById('file-input');
+const attachmentPreviews = document.getElementById('attachment-previews');
+const dropArea = document.getElementById('drop-area');
 
 // Check for existing API key
 function checkApiKey() {
@@ -121,23 +133,31 @@ clearKeyBtn.addEventListener('click', () => {
 
 chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     if (!checkApiKey()) return;
     if (!chat) await initializeChat();
 
     const message = messageInput.value.trim();
-    if (!message) return;
+    if (!message && attachedFiles.length === 0) return;
 
     // Add user message to chat
     addMessageToChat('user', message);
     messageInput.value = '';
 
     try {
+        // Process attached files
+        const fileParts = await processAttachedFiles();
+
+        // Prepare the message parts
+        const messageParts = [];
+        if (message) messageParts.push({ text: message });
+        messageParts.push(...fileParts);
+
         // Add assistant message placeholder
         const assistantMessageEl = addMessageToChat('assistant', '');
-        
-        // Stream the response
-        const result = await chat.sendMessageStream(message);
+
+        // Send the message with attached files
+        const result = await chat.sendMessageStream(messageParts);
         let fullResponse = '';
 
         for await (const chunk of result.stream) {
@@ -147,7 +167,12 @@ chatForm.addEventListener('submit', async (e) => {
             scrollToBottom();
         }
     } catch (error) {
+        console.error(error);
         addMessageToChat('error', 'An error occurred. Please try again.');
+    } finally {
+        // Clear attachments after sending
+        attachedFiles = [];
+        attachmentPreviews.innerHTML = '';
     }
 });
 
@@ -180,6 +205,150 @@ function scrollToBottom() {
 checkApiKey();
 if (localStorage.getItem(API_KEY_STORAGE_KEY)) {
     initializeChat();
+}
+
+fileInput.addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+});
+
+// Handle drag and drop
+['dragenter', 'dragover'].forEach(eventName => {
+    document.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropArea.style.display = 'block';
+    });
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    document.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropArea.style.display = 'none';
+    });
+});
+
+dropArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    handleFiles(e.dataTransfer.files);
+});
+
+// Handle attached files
+function handleFiles(files) {
+    for (let file of files) {
+        attachedFiles.push(file);
+        displayAttachmentPreview(file);
+    }
+}
+
+// Display attachment previews
+function displayAttachmentPreview(file) {
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'attachment-preview';
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-attachment';
+    removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', () => {
+        attachedFiles = attachedFiles.filter(f => f !== file);
+        attachmentPreviews.removeChild(previewDiv);
+    });
+
+    let previewContent;
+    if (file.type.startsWith('image/')) {
+        previewContent = document.createElement('img');
+        previewContent.src = URL.createObjectURL(file);
+    } else {
+        previewContent = document.createElement('div');
+        previewContent.textContent = file.name;
+    }
+
+    previewDiv.appendChild(previewContent);
+    previewDiv.appendChild(removeBtn);
+    attachmentPreviews.appendChild(previewDiv);
+}
+
+async function processAttachedFiles() {
+    const fileParts = [];
+    for (let file of attachedFiles) {
+        const fileUri = await uploadFile(file);
+        fileParts.push({
+            file_data: {
+                mime_type: file.type,
+                file_uri: fileUri
+            }
+        });
+    }
+    return fileParts;
+}
+
+// Upload file to File API
+async function uploadFile(file) {
+    const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+    const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`;
+
+    // Start resumable upload
+    const startUploadResponse = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+            'X-Goog-Upload-Protocol': 'resumable',
+            'X-Goog-Upload-Command': 'start',
+            'X-Goog-Upload-Header-Content-Length': file.size,
+            'X-Goog-Upload-Header-Content-Type': file.type,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            file: { display_name: file.name }
+        })
+    });
+
+    if (!startUploadResponse.ok) {
+        throw new Error('Failed to initiate file upload.');
+    }
+
+    const uploadUrlFromHeader = startUploadResponse.headers.get('X-Goog-Upload-URL');
+
+    // Upload the file data
+    const uploadResponse = await fetch(uploadUrlFromHeader, {
+        method: 'POST',
+        headers: {
+            'Content-Length': file.size,
+            'X-Goog-Upload-Offset': '0',
+            'X-Goog-Upload-Command': 'upload, finalize'
+        },
+        body: file
+    });
+
+    if (!uploadResponse.ok) {
+        throw new Error('Failed to upload file data.');
+    }
+
+    const fileInfo = await uploadResponse.json();
+    const fileUri = fileInfo.file.uri;
+    const fileName = fileInfo.file.name;
+    let fileState = fileInfo.file.state;
+
+    // Ensure the file state is ACTIVE
+    while (fileState === 'PROCESSING') {
+        // Optionally, you can display a message to the user about processing
+        console.log(`Processing file ${file.name}, please wait...`);
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+
+        // Fetch the file info again
+        const fileStatusResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/files/${fileName}?key=${apiKey}`);
+
+        if (!fileStatusResponse.ok) {
+            throw new Error('Failed to fetch file status.');
+        }
+
+        const fileStatusInfo = await fileStatusResponse.json();
+        fileState = fileStatusInfo.file.state;
+    }
+
+    if (fileState !== 'ACTIVE') {
+        throw new Error(`File ${file.name} is not active.`);
+    }
+
+    // Return the file URI to be used in the message parts
+    return fileUri;
 }
 ```
 
@@ -378,9 +547,12 @@ header h1 {
 }
 
 .input-container {
+    display: flex;
+    align-items: center;
     padding: 1rem;
     border-top: 1px solid #dee2e6;
 }
+
 
 #chat-form {
     display: flex;
@@ -393,6 +565,7 @@ header h1 {
     border: 1px solid #dee2e6;
     border-radius: 6px;
     font-size: 1rem;
+    margin-left: 0.5rem;
 }
 
 button {
@@ -428,229 +601,75 @@ button:disabled {
         padding: 0.75rem;
     }
 }
+
+/* Attachment Icon */
+.attachment-icon {
+    font-size: 1.5rem;
+    cursor: pointer;
+    margin-right: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+/* Attachment Previews */
+.attachment-previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-top: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+}
+
+.attachment-preview {
+    position: relative;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.5rem;
+    background-color: white;
+    display: flex;
+    align-items: center;
+}
+
+.attachment-preview img {
+    max-width: 100px;
+    max-height: 100px;
+    border-radius: 4px;
+}
+
+.attachment-preview div {
+    max-width: 100px;
+    word-wrap: break-word;
+}
+
+.remove-attachment {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: transparent;
+    border: none;
+    color: #dc3545;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+/* Drag and Drop Area */
+.drop-area {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 2rem;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+
 ```
 
-This all works well, but I want to introduce new features. I want to add the ability to add documents to the chat: images, videos, text documents. Users should be able to drag and drop their items into the page, but also click on an icon on the left of the chat input. When items are attached to a message before sending, little previews of them should be shown on top of the input, where they can each be removed. Before being able to send any messages, the script will have to process and prepare any and all attached files. Here is the documentation from Google. I want you to fully develop and implement this. I want this to all happen client-side, never using the backend.
-
-```
-Explore vision capabilities with the Gemini API 
-
-bookmark_border
-
-Python Node.js Go REST
-
-The Gemini API can run inference on images and videos passed to it. When passed an image, a series of images, or a video, Gemini can:
-
-Describe or answer questions about the content
-Summarize the content
-Extrapolate from the content
-This tutorial demonstrates some possible ways to prompt the Gemini API with images and video input. All output is text-only.
-
-Before you begin: Set up your project and API key
-Before calling the Gemini API, you need to set up your project and configure your API key.
-
- Expand to view how to set up your project and API key
-
-Prompting with images
-In this tutorial, you will upload images using the File API or as inline data and generate content based on those images.
-
-Technical details (images)
-Gemini 1.5 Pro and 1.5 Flash support a maximum of 3,600 image files.
-
-Images must be in one of the following image data MIME types:
-
-PNG - image/png
-JPEG - image/jpeg
-WEBP - image/webp
-HEIC - image/heic
-HEIF - image/heif
-Each image is equivalent to 258 tokens.
-
-While there are no specific limits to the number of pixels in an image besides the model's context window, larger images are scaled down to a maximum resolution of 3072x3072 while preserving their original aspect ratio, while smaller images are scaled up to 768x768 pixels. There is no cost reduction for images at lower sizes, other than bandwidth, or performance improvement for images at higher resolution.
-
-For best results:
-
-Rotate images to the correct orientation before uploading.
-Avoid blurry images.
-If using a single image, place the text prompt after the image.
-Upload an image and generate content
-Use the media.upload method of the File API to upload an image of any size. (Always use the File API when the combination of files and system instructions that you intend to send is larger than 20 MB.)
-
-Note: The File API lets you store up to 20 GB of files per project, with a per-file maximum size of 2 GB. Files are stored for 48 hours. They can be accessed in that period with your API key, but cannot be downloaded from the API. It is available at no cost in all regions where the Gemini API is available.
-After uploading the file, you can make GenerateContent requests that reference the File API URI. Select the generative model and provide it with a text prompt and the uploaded image.
-
-
-MIME_TYPE=$(file -b --mime-type "${IMG_PATH_2}")
-NUM_BYTES=$(wc -c < "${IMG_PATH_2}")
-DISPLAY_NAME=TEXT
-
-tmp_header_file=upload-header.tmp
-
-# Initial resumable request defining metadata.
-# The upload url is in the response headers dump them to a file.
-curl "${BASE_URL}/upload/v1beta/files?key=${GOOGLE_API_KEY}" \
-  -D upload-header.tmp \
-  -H "X-Goog-Upload-Protocol: resumable" \
-  -H "X-Goog-Upload-Command: start" \
-  -H "X-Goog-Upload-Header-Content-Length: ${NUM_BYTES}" \
-  -H "X-Goog-Upload-Header-Content-Type: ${MIME_TYPE}" \
-  -H "Content-Type: application/json" \
-  -d "{'file': {'display_name': '${DISPLAY_NAME}'}}" 2> /dev/null
-
-upload_url=$(grep -i "x-goog-upload-url: " "${tmp_header_file}" | cut -d" " -f2 | tr -d "\r")
-rm "${tmp_header_file}"
-
-# Upload the actual bytes.
-curl "${upload_url}" \
-  -H "Content-Length: ${NUM_BYTES}" \
-  -H "X-Goog-Upload-Offset: 0" \
-  -H "X-Goog-Upload-Command: upload, finalize" \
-  --data-binary "@${IMG_PATH_2}" 2> /dev/null > file_info.json
-
-file_uri=$(jq ".file.uri" file_info.json)
-echo file_uri=$file_uri
-
-# Now generate content using that file
-curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$GOOGLE_API_KEY" \
-    -H 'Content-Type: application/json' \
-    -X POST \
-    -d '{
-      "contents": [{
-        "parts":[
-          {"text": "Can you tell me about the instruments in this photo?"},
-          {"file_data":
-            {"mime_type": "image/jpeg", 
-            "file_uri": '$file_uri'}
-        }]
-        }]
-       }' 2> /dev/null > response.json
-
-cat response.json
-echo
-
-jq ".candidates[].content.parts[].text" response.json
-
-Verify image file upload and get metadata
-You can verify the API successfully stored the uploaded file and get its metadata by calling files.get. Only the name (and by extension, the uri) are unique.
-
-
-name=$(jq ".file.name" file_info.json)
-# Get the file of interest to check state
-curl https://generativelanguage.googleapis.com/v1beta/files/$name > file_info.json
-# Print some information about the file you got
-name=$(jq ".file.name" file_info.json)
-echo name=$name
-file_uri=$(jq ".file.uri" file_info.json)
-echo file_uri=$file_uri
-
-Prompting with video
-In this tutorial, you will upload a video using the File API and generate content based on those images.
-
-Note: The File API is required to upload video files, due to their size. However, the File API is only available for Python, Node.js, Go, and REST.
-Technical details (video)
-Gemini 1.5 Pro and Flash support up to approximately an hour of video data.
-
-Video must be in one of the following video format MIME types:
-
-video/mp4
-video/mpeg
-video/mov
-video/avi
-video/x-flv
-video/mpg
-video/webm
-video/wmv
-video/3gpp
-The File API service extracts image frames from videos at 1 frame per second (FPS) and audio at 1Kbps, single channel, adding timestamps every second. These rates are subject to change in the future for improvements in inference.
-
-Note: The details of fast action sequences may be lost at the 1 FPS frame sampling rate. Consider slowing down high-speed clips for improved inference quality.
-Individual frames are 258 tokens, and audio is 32 tokens per second. With metadata, each second of video becomes ~300 tokens, which means a 1M context window can fit slightly less than an hour of video.
-
-To ask questions about time-stamped locations, use the format MM:SS, where the first two digits represent minutes and the last two digits represent seconds.
-
-For best results:
-
-Use one video per prompt.
-If using a single video, place the text prompt after the video.
-Upload a video and generate content
-Note: The File API lets you store up to 20 GB of files per project, with a per-file maximum size of 2 GB. Files are stored for 48 hours. They can be accessed in that period with your API key, but they cannot be downloaded using any API. It is available at no cost in all regions where the Gemini API is available.
-
-MIME_TYPE=$(file -b --mime-type "${VIDEO_PATH}")
-NUM_BYTES=$(wc -c < "${VIDEO_PATH}")
-DISPLAY_NAME=VIDEO_PATH
-
-# Initial resumable request defining metadata.
-# The upload url is in the response headers dump them to a file.
-curl "${BASE_URL}/upload/v1beta/files?key=${GOOGLE_API_KEY}" \
-  -D upload-header.tmp \
-  -H "X-Goog-Upload-Protocol: resumable" \
-  -H "X-Goog-Upload-Command: start" \
-  -H "X-Goog-Upload-Header-Content-Length: ${NUM_BYTES}" \
-  -H "X-Goog-Upload-Header-Content-Type: ${MIME_TYPE}" \
-  -H "Content-Type: application/json" \
-  -d "{'file': {'display_name': '${DISPLAY_NAME}'}}" 2> /dev/null
-
-upload_url=$(grep -i "x-goog-upload-url: " "${tmp_header_file}" | cut -d" " -f2 | tr -d "\r")
-rm "${tmp_header_file}"
-
-# Upload the actual bytes.
-curl "${upload_url}" \
-  -H "Content-Length: ${NUM_BYTES}" \
-  -H "X-Goog-Upload-Offset: 0" \
-  -H "X-Goog-Upload-Command: upload, finalize" \
-  --data-binary "@${VIDEO_PATH}" 2> /dev/null > file_info.json
-
-file_uri=$(jq ".file.uri" file_info.json)
-echo file_uri=$file_uri
-
-state=$(jq ".file.state" file_info.json)
-echo state=$state
-
-# Ensure the state of the video is 'ACTIVE'
-while [[ "($state)" = *"PROCESSING"* ]];
-do
-  echo "Processing video..."
-  sleep 5
-  # Get the file of interest to check state
-  curl https://generativelanguage.googleapis.com/v1beta/files/$name > file_info.json
-  state=$(jq ".file.state" file_info.json)
-done
-
-# Now generate content using that file
-curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$GOOGLE_API_KEY" \
-    -H 'Content-Type: application/json' \
-    -X POST \
-    -d '{
-      "contents": [{
-        "parts":[
-          {"text": "Describe this video clip"},
-          {"file_data":{"mime_type": "video/mp4", "file_uri": '$file_uri'}}]
-        }]
-       }' 2> /dev/null > response.json
-
-cat response.json
-echo
-
-jq ".candidates[].content.parts[].text" response.json
-
-List files
-You can list all files uploaded using the File API and their URIs using files.list.
-
-
-echo "My files: "
-
-curl "https://generativelanguage.googleapis.com/v1beta/files?key=$GOOGLE_API_KEY"
-
-Delete files
-Files uploaded using the File API are automatically deleted after 2 days. You can also manually delete them using files.delete.
-
-
-curl --request "DELETE" https://generativelanguage.googleapis.com/v1beta/files/$name?key=$GOOGLE_API_KEY
-
-What's next
-This guide shows how to upload image and video files using the File API and then generate text outputs from image and video inputs. To learn more, see the following resources:
-
-File prompting strategies: The Gemini API supports prompting with text, image, audio, and video data, also known as multimodal prompting.
-System instructions: System instructions let you steer the behavior of the model based on your specific needs and use cases.
-Safety guidance: Sometimes generative AI models produce unexpected outputs, such as outputs that are inaccurate, biased, or offensive. Post-processing and human evaluation are essential to limit the risk of harm from such outputs.
-```
+This all works great, but I want to make some heavy changes. I want to fully redesign the UI and how the interface works. I want you to fully develop and implement this. I want it to use a dark theme, and to be as minimilistic as possible. Redesign all the elements and componenets, how they act and react, how they look and feel.

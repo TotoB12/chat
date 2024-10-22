@@ -24,14 +24,22 @@
         </header>
         
         <div id="chat-history"></div>
-        
-        <div class="input-container">
-            <form id="chat-form">
-                <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off">
-                <button type="submit">Send</button>
-            </form>
-        </div>
     </div>
+
+    <div id="attachment-previews" class="attachment-previews"></div>
+
+    <div class="input-container">
+        <form id="chat-form">
+            <!-- Attachment Icon -->
+            <label for="file-input" class="attachment-icon">📎</label>
+            <input type="file" id="file-input" multiple style="display: none;">
+            <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off">
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <!-- Drag and Drop Area -->
+    <div id="drop-area" class="drop-area">Drop files here</div>
 
     <script type="module" src="script.js"></script>
 </body>
