@@ -1,12 +1,8 @@
-// import fs from "fs";
-// import http from "http";
-// import path from "path";
-// import url from "url";
+const express = require("express");
 const fs = require("fs");
-const http = require("http");
 const path = require("path");
-const url = require("url");
 
+const app = express();
 const PORT = 8000;
 
 const mimeType = {
@@ -16,33 +12,32 @@ const mimeType = {
   ".css": "text/css",
 };
 
-http
-  .createServer((req, res) => {
-    console.log(`  ${req.method} ${req.url}`);
+app.get("*", (req, res) => {
+  console.log(`  ${req.method} ${req.url}`);
 
-    const parsedUrl = url.parse(req.url);
-    let sanitizedPath = path
-      .normalize(parsedUrl.pathname)
-      .replace(/^(\.\.[\/\\])+/, "")
-      .substring(1);
+  let sanitizedPath = path
+    .normalize(req.path)
+    .replace(/^(\.\.[\/\\])+/, "")
+    .substring(1);
 
-    if (sanitizedPath === "") {
-      sanitizedPath = "index.html";
-    }
+  if (sanitizedPath === "") {
+    sanitizedPath = "index.html";
+  }
 
-    const ext = path.parse(sanitizedPath).ext;
+  const ext = path.parse(sanitizedPath).ext;
 
-    try {
-      const data = fs.readFileSync(sanitizedPath);
+  fs.readFile(sanitizedPath, (err, data) => {
+    if (err) {
+      res.status(404).end();
+    } else {
       if (mimeType[ext]) {
         res.setHeader("Content-Type", mimeType[ext]);
       }
       res.end(data);
-    } catch (err) {
-      res.statusCode = 404;
-      res.end();
     }
-  })
-  .listen(parseInt(PORT));
+  });
+});
 
-console.log(`Server listening on http://localhost:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server listening on http://localhost:${PORT}`);
+});
