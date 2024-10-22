@@ -208,6 +208,7 @@ body {
 
 .input-group {
     display: flex;
+    width: 100%;
     flex-direction: column;
     background-color: var(--bg-tertiary);
     border-radius: 1.2rem;
@@ -378,12 +379,14 @@ button {
     position: absolute;
     bottom: 30px;
     border-radius: 28px;
+    width: 700px;
     align-self: center;
     background-color: var(--bg-secondary);
     padding: 0.5rem;
     display: flex;
+    align-items: flex-end;
     justify-content: space-between;
-    align-items: center;
+    box-shadow: rgba(255, 255, 255, 0.12) 0px 0px 0px 1px inset;
 }
 
 .toolbar #message-input {

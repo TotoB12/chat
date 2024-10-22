@@ -752,6 +752,7 @@ body {
 
 .input-group {
     display: flex;
+    width: 100%;
     flex-direction: column;
     background-color: var(--bg-tertiary);
     border-radius: 1.2rem;
@@ -922,12 +923,14 @@ button {
     position: absolute;
     bottom: 30px;
     border-radius: 28px;
+    width: 700px;
     align-self: center;
     background-color: var(--bg-secondary);
     padding: 0.5rem;
     display: flex;
+    align-items: flex-end;
     justify-content: space-between;
-    align-items: center;
+    box-shadow: rgba(255, 255, 255, 0.12) 0px 0px 0px 1px inset;
 }
 
 .toolbar #message-input {
@@ -950,3 +953,4 @@ button {
 }
 ```
 
+This all works, but I want to redesign how the chat is displayed. No messages should have a "message-icon". Only the user messages should have a background. The user's messages should be displayed alligned to the right, and the assistant's on the left. I want you to fully develop and implement this.
