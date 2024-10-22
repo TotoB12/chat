@@ -247,66 +247,80 @@ async function uploadFile(file) {
     const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
     const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`;
 
-    // Start resumable upload
-    const startUploadResponse = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: {
-            'X-Goog-Upload-Protocol': 'resumable',
-            'X-Goog-Upload-Command': 'start',
-            'X-Goog-Upload-Header-Content-Length': file.size,
-            'X-Goog-Upload-Header-Content-Type': file.type,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            file: { display_name: file.name }
-        })
-    });
+    // Add event message
+    const eventMessage = addEventMessage(`Uploading file ${file.name}...`);
 
-    if (!startUploadResponse.ok) {
-        throw new Error('Failed to initiate file upload.');
-    }
+    try {
+        // Start resumable upload
+        const startUploadResponse = await fetch(uploadUrl, {
+            method: 'POST',
+            headers: {
+                'X-Goog-Upload-Protocol': 'resumable',
+                'X-Goog-Upload-Command': 'start',
+                'X-Goog-Upload-Header-Content-Length': file.size,
+                'X-Goog-Upload-Header-Content-Type': file.type,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                file: { display_name: file.name }
+            })
+        });
 
-    const uploadUrlFromHeader = startUploadResponse.headers.get('X-Goog-Upload-URL');
-
-    // Upload the file data
-    const uploadResponse = await fetch(uploadUrlFromHeader, {
-        method: 'POST',
-        headers: {
-            'Content-Length': file.size,
-            'X-Goog-Upload-Offset': '0',
-            'X-Goog-Upload-Command': 'upload, finalize'
-        },
-        body: file
-    });
-
-    if (!uploadResponse.ok) {
-        throw new Error('Failed to upload file data.');
-    }
-
-    const fileInfo = await uploadResponse.json();
-    const fileUri = fileInfo.file.uri;
-    const fileName = fileInfo.file.name;
-    let fileState = fileInfo.file.state;
-
-    while (fileState === 'PROCESSING') {
-        console.log(`Processing file ${file.name}, please wait...`);
-        await new Promise(resolve => setTimeout(resolve, 3000));
-
-        const fileStatusResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`);
-
-        if (!fileStatusResponse.ok) {
-            throw new Error('Failed to fetch file status.');
+        if (!startUploadResponse.ok) {
+            throw new Error('Failed to initiate file upload.');
         }
 
-        const fileStatusInfo = await fileStatusResponse.json();
-        fileState = fileStatusInfo.state;
-    }
+        const uploadUrlFromHeader = startUploadResponse.headers.get('X-Goog-Upload-URL');
 
-    if (fileState !== 'ACTIVE') {
-        throw new Error(`File ${file.name} is not active.`);
-    }
+        // Upload the file data
+        const uploadResponse = await fetch(uploadUrlFromHeader, {
+            method: 'POST',
+            headers: {
+                'Content-Length': file.size,
+                'X-Goog-Upload-Offset': '0',
+                'X-Goog-Upload-Command': 'upload, finalize'
+            },
+            body: file
+        });
 
-    return fileUri;
+        if (!uploadResponse.ok) {
+            throw new Error('Failed to upload file data.');
+        }
+
+        const fileInfo = await uploadResponse.json();
+        const fileUri = fileInfo.file.uri;
+        const fileName = fileInfo.file.name;
+        let fileState = fileInfo.file.state;
+
+        while (fileState === 'PROCESSING') {
+            eventMessage.querySelector('.message-content').innerText = `Processing file ${file.name}, please wait...`;
+            console.log(`Processing file ${file.name}, please wait...`);
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            const fileStatusResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`);
+
+            if (!fileStatusResponse.ok) {
+                throw new Error('Failed to fetch file status.');
+            }
+
+            const fileStatusInfo = await fileStatusResponse.json();
+            fileState = fileStatusInfo.state;
+        }
+
+        if (fileState !== 'ACTIVE') {
+            throw new Error(`File ${file.name} is not active.`);
+        }
+
+        // Remove event message
+        removeEventMessage(eventMessage);
+
+        return fileUri;
+    } catch (error) {
+        // Update event message to show error
+        eventMessage.querySelector('.message-content').innerText = `Error uploading file ${file.name}: ${error.message}`;
+        console.error(error);
+        throw error;
+    }
 }
 
 function addMessageToChat(role, content, attachments = []) {
@@ -347,6 +361,32 @@ function addMessageToChat(role, content, attachments = []) {
     scrollToBottom();
 
     return contentDiv;
+}
+
+function addEventMessage(content) {
+    const eventDiv = document.createElement('div');
+    eventDiv.className = 'message event-message';
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    contentDiv.innerText = content;
+    eventDiv.appendChild(contentDiv);
+    chatHistory.appendChild(eventDiv);
+    scrollToBottom();
+    return eventDiv;
+}
+
+function removeEventMessage(eventDiv) {
+    if (eventDiv) {
+        // Add the 'fade-out' class to trigger CSS transition
+        eventDiv.classList.add('fade-out');
+
+        // Listen for the transition end event to remove the element after the animation
+        eventDiv.addEventListener('transitionend', () => {
+            if (eventDiv && eventDiv.parentNode) {
+                eventDiv.parentNode.removeChild(eventDiv);
+            }
+        }, { once: true }); // Ensure the event listener is called only once
+    }
 }
 
 function scrollToBottom() {

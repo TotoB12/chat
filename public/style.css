@@ -219,9 +219,26 @@ html {
     padding: 10px;
 }
 
+.event-message {
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    margin: 0.5rem 0;
+    border-radius: 0.5rem;
+    text-align: center;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.event-message.fade-out {
+    opacity: 0;
+}
+
 .message-content {
     flex-grow: 1;
-    margin: 0 0.4rem;
     color: var(--text-primary);
 }
 
