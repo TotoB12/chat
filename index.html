@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Chat</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="api-key-modal" class="modal">
+        <div class="modal-content">
+            <h2>Welcome to Gemini Chat</h2>
+            <p>Please enter your Google Gemini API key to continue:</p>
+            <input type="password" id="api-key-input" placeholder="Enter your API key">
+            <button id="save-api-key">Start Chatting</button>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <header>
+            <h1>Gemini Chat</h1>
+            <button id="clear-key" class="clear-key-btn">Clear API Key</button>
+        </header>
+        
+        <div id="chat-history"></div>
+        
+        <div class="input-container">
+            <form id="chat-form">
+                <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off">
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
