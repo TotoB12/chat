@@ -438,7 +438,7 @@ button {
 
 .toolbar {
     position: absolute;
-    bottom: 30px;
+    bottom: 20px;
     border-radius: 28px;
     width: 700px;
     align-self: center;

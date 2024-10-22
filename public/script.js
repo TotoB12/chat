@@ -28,7 +28,6 @@ const viewerVideo = document.getElementById('viewer-video');
 const prevButton = document.querySelector('.viewer-nav.prev');
 const nextButton = document.querySelector('.viewer-nav.next');
 
-// Initialize Gemini Chat
 async function initializeChat() {
     const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
     if (!apiKey) return;
