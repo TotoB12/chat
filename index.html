@@ -4,13 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Chat</title>
+    <title>TotoB12 Chat</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <!-- API Key Modal -->
     <div id="api-key-modal" class="modal">
         <div class="modal-content">
             <h2>Welcome</h2>
@@ -23,9 +22,8 @@
         </div>
     </div>
 
-    <!-- Header with Title and Clear Button -->
     <header class="header">
-        <h1>Gemini</h1>
+        <h1>TotoB12</h1>
         <button id="clear-key" class="icon-button" title="Clear API Key">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
@@ -33,14 +31,11 @@
         </button>
     </header>
 
-    <!-- Chat Container -->
     <div class="chat-container">
         <div id="chat-history"></div>
     </div>
 
-    <!-- Floating Toolbar at the Bottom -->
     <div class="toolbar">
-        <!-- New Chat Button -->
         <button id="new-chat" class="icon-button" title="New Chat">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" class="size-6" aria-hidden="true">
                 <path fill="url(#a)"
@@ -102,7 +97,6 @@
             </svg>
         </button>
 
-        <!-- File Upload -->
         <button for="file-input" class="icon-button" id="upload-button" title="Attach files">
             <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="size-6">
                 <path
@@ -112,9 +106,8 @@
         </button>
         <input type="file" id="file-input" multiple>
 
-        <!-- Message Input -->
         <div class="input-group" id="chat-form">
-            <input type="text" id="message-input" placeholder="Message Gemini" autocomplete="off">
+            <input type="text" id="message-input" placeholder="Message TotoB12" autocomplete="off">
             <button type="submit" class="send-button" title="Send message">
                 <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" class="size-6">
                     <path
@@ -126,7 +119,6 @@
     </div>
 
 
-    <!-- Drop Area for File Upload -->
     <div id="drop-area" class="drop-area">
         <div class="drop-area-content">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -138,7 +130,6 @@
         </div>
     </div>
 
-    <!-- Script -->
     <script type="module" src="script.js"></script>
 </body>
 

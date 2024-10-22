@@ -1,9 +1,9 @@
 :root {
-    --bg-primary: #101524;    /* App's main color */
-    --bg-secondary: #161c2e;  /* Toolbar background */
-    --bg-tertiary: #0e131f;   /* Input background */
-    --text-primary: #f2ddcc;  /* Response and input text */
-    --text-secondary: #828bac; /* Input placeholder */
+    --bg-primary: #101524;
+    --bg-secondary: #161c2e;
+    --bg-tertiary: #0e131f;
+    --text-primary: #f2ddcc;
+    --text-secondary: #828bac;
     --send-color: #455172;
     --send-hover: #505b7b;
     --accent-hover: #101420;
@@ -23,7 +23,6 @@ body {
     flex-direction: column;
 }
 
-/* Modal Styles */
 .modal {
     display: none;
     position: fixed;
@@ -80,16 +79,14 @@ body {
     pointer-events: none;
 }
 
-.input-wrapper input:focus + label,
-.input-wrapper input:not(:placeholder-shown) + label {
+.input-wrapper input:focus+label,
+.input-wrapper input:not(:placeholder-shown)+label {
     top: 0;
     transform: translateY(-50%) scale(0.8);
     background-color: var(--bg-tertiary);
     padding: 0 0.5rem;
 }
-/* Modal Styles remain the same */
 
-/* Header Styles */
 .header {
     position: absolute;
     top: 0;
@@ -117,11 +114,12 @@ body {
     color: var(--text-primary);
 }
 
-/* Chat Container */
 .chat-container {
     flex-grow: 1;
-    padding: 2rem 1rem 0;  /* Add some padding to avoid overlap */
+    padding: 2rem 1rem 0;
     overflow-y: auto;
+    width: 800px;
+    align-self: center;
 }
 
 #chat-history {
@@ -131,7 +129,6 @@ body {
     scroll-behavior: smooth;
 }
 
-/* Message Styles */
 .message {
     display: flex;
     gap: 1rem;
@@ -143,8 +140,15 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .user-message {
@@ -183,7 +187,6 @@ body {
     font-family: monospace;
 }
 
-/* Toolbar Styles */
 .bottom-container {
     position: fixed;
     bottom: 0;
@@ -223,7 +226,6 @@ body {
     display: none;
 }
 
-/* Buttons */
 button {
     background: none;
     border: none;
@@ -253,7 +255,6 @@ button {
     color: var(--text-primary);
 }
 
-/* Attachment Previews */
 .attachment-preview {
     position: relative;
     border: 1px solid var(--border-color);
@@ -296,7 +297,6 @@ button {
     color: var(--error-color);
 }
 
-/* Drop Area */
 .drop-area {
     display: none;
     position: fixed;
@@ -320,11 +320,11 @@ button {
     border-radius: 16px;
 }
 
-/* Media Queries */
 @media (max-width: 768px) {
     .header {
         padding: 0.5rem;
     }
+
     .bottom-container {
         padding: 0.5rem;
     }
