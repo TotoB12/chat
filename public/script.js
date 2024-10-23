@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "https://esm.run/@google/generative-ai";
 import { marked } from "https://esm.run/marked";
+import { functions, tools } from './tools.js';
 
 const API_KEY_STORAGE_KEY = 'gemini-api-key';
 let chat;
@@ -73,6 +74,7 @@ async function initializeChat() {
         generationConfig: {
             temperature: 0.2,
         },
+        tools: { functionDeclarations: tools },
         safetySettings: safetySettings,
         systemInstruction: preamble,
     });
@@ -161,15 +163,48 @@ async function handleSubmit() {
         const assistantMessageEl = addMessageToChat('assistant', '');
 
         // Send message and handle stream
-        const result = await chat.sendMessageStream(messageParts);
-        let fullResponse = '';
+        // const result = await chat.sendMessageStream(messageParts);
+        // let fullResponse = '';
+        let response = null;
+        response = await chat.sendMessage(messageParts);
+        let tool_results = [];
 
-        for await (const chunk of result.stream) {
-            const chunkText = chunk.text();
-            fullResponse += chunkText;
-            assistantMessageEl.innerHTML = marked.parse(fullResponse);
-            scrollToBottom();
+        // for await (const chunk of result.stream) {
+        //     console.log(chunk);
+        //     const chunkText = chunk.text();
+        //     fullResponse += chunkText;
+        //     assistantMessageEl.innerHTML = marked.parse(fullResponse);
+        //     scrollToBottom();
+        // }
+        while (response.response.functionCalls()) {
+            if (response.response.text() != "") {
+                console.log("Tool calling text, DONT READ IT,\n" + response.response.text());
+            }
+
+            for (const tool of response.response.functionCalls()) {
+                console.log("Tool name: " + tool.name);
+                console.log("Tool args: " + JSON.stringify(tool.args));
+                const output = await functions[tool.name](tool.args);
+                tool_results.push({
+                    functionResponse: {
+                        name: tool.name,
+                        response: output,
+                    },
+                });
+            }
+
+            console.log("Tool results getting fed back:");
+            for (const tool_result of tool_results) {
+                console.log(tool_result.functionResponse.name);
+                console.log(tool_result.functionResponse.response);
+            }
+
+            response = await chat.sendMessage([
+                tool_results
+            ]);
         }
+
+        assistantMessageEl.innerHTML = marked.parse(response.response.text());
     } catch (error) {
         console.error(error);
         addMessageToChat('error', 'An error occurred. Please try again.');
