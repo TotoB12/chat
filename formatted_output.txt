@@ -162,6 +162,7 @@ public\script.js
 ```javascript
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "https://esm.run/@google/generative-ai";
 import { marked } from "https://esm.run/marked";
+import { functions, tools } from './tools.js';
 
 const API_KEY_STORAGE_KEY = 'gemini-api-key';
 let chat;
@@ -324,10 +325,55 @@ async function handleSubmit() {
         const assistantMessageEl = addMessageToChat('assistant', '');
 
         // Send message and handle stream
-        const result = await chat.sendMessageStream(messageParts);
+        // const result = await chat.sendMessageStream(messageParts);
         let fullResponse = '';
+        let response = null;
+        response = await chat.sendMessageStream(messageParts);
+        let tool_results = [];
 
-        for await (const chunk of result.stream) {
+        // for await (const chunk of result.stream) {
+        //     if (chunk.functionCalls()) {
+        //         for (const tool of chunk.functionCalls()) {
+        //             console.log("Tool name: " + tool.name);
+        //             console.log("Tool args: " + JSON.stringify(tool.args));
+        //         }
+        //     }
+        //     console.log(chunk);
+        //     const chunkText = chunk.text();
+        //     fullResponse += chunkText;
+        //     assistantMessageEl.innerHTML = marked.parse(fullResponse);
+        //     scrollToBottom();
+        // }
+        async function useTools(calls) {
+            for (const tool of calls) {
+                console.log("Tool name: " + tool.name);
+                console.log("Tool args: " + JSON.stringify(tool.args));
+                const output = await functions[tool.name](tool.args);
+                tool_results.push({
+                    functionResponse: {
+                        name: tool.name,
+                        response: output,
+                    },
+                });
+            }
+
+            console.log("Tool results getting fed back:");
+            for (const tool_result of tool_results) {
+                console.log(tool_result.functionResponse.name);
+                console.log(tool_result.functionResponse.response);
+            }
+
+            return tool_results;
+        }
+        for (const chunk of response.stream) {
+            while (chunk.functionCalls()) {
+                tool_results = await useTools(chunk.functionCalls());
+
+                response = await chat.sendMessageStream([
+                    tool_results
+                ]);
+            }
+
             const chunkText = chunk.text();
             fullResponse += chunkText;
             assistantMessageEl.innerHTML = marked.parse(fullResponse);
@@ -1233,44 +1279,21 @@ button {
 
 public\tools.js
 ```javascript
-const { image_search } = require("duckduckgo-images-api");
-const axios = require('axios');
-const cheerio = require('cheerio');
-
-function getDateAndTime() {
+async function getDateAndTime() {
     const date_and_time = new Date();
     return { date_and_time: date_and_time };
 }
 
 async function getWeather(location) {
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${process.env.WEATHER_KEY}&units=metric`;
-    return fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            return { weather: data };
-        })
-        .catch(error => {
-            console.error(error);
-            return { error: error };
-        });
-}
-
-async function getImage(query) {
+    const apiKey = 'YOUR_OPENWEATHERMAP_API_KEY';
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&appid=${apiKey}&units=metric`;
     try {
-        const results = await image_search({
-            query: query,
-            moderate: false,
-            iterations: 1,
-            retries: 2,
-        });
-        const images = results.slice(0, 4).map(result =>
-            // `https://wsrv.nl/?url=${encodeURIComponent(result.image)}`
-            result.image
-        );
-        return { images };
+        const response = await fetch(url);
+        const data = await response.json();
+        return { weather: data };
     } catch (error) {
         console.error(error);
-        return { images: [] };
+        return { error: error.message };
     }
 }
 
@@ -1279,62 +1302,19 @@ async function generateImage(query) {
     return { generatedImageUrl: imageUrl };
 }
 
-async function performInternetSearch(query) {
-    try {
-        const headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        };
-
-        const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-        const response = await axios.get(url, { headers });
-
-        if (response.status !== 200) {
-            throw new Error(`HTTP error ${response.status}`);
-        }
-
-        const $ = cheerio.load(response.data);
-        const webResults = [];
-        $('div.result.results_links.results_links_deep.web-result').each((i, elem) => {
-            const title = $(elem).find('h2.result__title a.result__a').text().trim();
-            const url = $(elem).find('h2.result__title a.result__a').attr('href');
-            const description = $(elem).find('a.result__snippet').text().trim();
-            const favicon = $(elem).find('img.result__icon__img').attr('src') || '';
-
-            if (!$(elem).find('.badge--ad').length) {
-                webResults.push({ title, url, description, favicon });
-            }
-        });
-
-        const limitedWebResults = webResults.slice(0, 10);
-
-        return { webResults: limitedWebResults };
-    } catch (error) {
-        console.error(error);
-        return { webResults: [] };
-    }
-}
-
-const functions = {
+export const functions = {
     getDateAndTime: () => {
         return getDateAndTime()
     },
     getWeather: ({ location }) => {
         return getWeather(location);
     },
-    getImage: ({ query }) => {
-        return getImage(query);
-    },
     generateImage: ({ query }) => {
         return generateImage(query);
     },
-    performInternetSearch: ({ query }) => {
-        return performInternetSearch(query);
-    },
 };
 
-const tools = [
+export const tools = [
     {
         name: "getDateAndTime",
         description: "Get the current date and time",
@@ -1347,24 +1327,10 @@ const tools = [
             properties: {
                 location: {
                     type: "STRING",
-                    description: "The precise location/city to get the weather for, in the simplest format possible (e.g. 'washington dc', 'paris'). Do not use commas or other special characters.",
+                    description: "The precise location/city to get the weather for, in the simplest format possible (e.g., 'washington dc', 'paris'). Do not use commas or other special characters.",
                 },
             },
             required: ["location"],
-        },
-    },
-    {
-        name: "getImage",
-        parameters: {
-            type: "OBJECT",
-            description: "Search for images on the web",
-            properties: {
-                query: {
-                    type: "STRING",
-                    description: "The search query for the images",
-                },
-            },
-            required: ["query"],
         },
     },
     {
@@ -1381,382 +1347,7 @@ const tools = [
             required: ["query"],
         },
     },
-    {
-        name: "performInternetSearch",
-        parameters: {
-            type: "OBJECT",
-            description: "Perform a search on the internet",
-            properties: {
-                query: {
-                    type: "STRING",
-                    description: "The search query for the internet search",
-                },
-            },
-            required: ["query"],
-        },
-    },
 ];
-
-module.exports = { functions, tools };
 ```
 
-This all works well, but I want to add new features. I wish to add tool use for the AI to use. Here is some code that I used in another project:
-
-main.js
-```javascript
-const { app, BrowserWindow, Tray, Menu, ipcMain } = require('electron');
-const path = require('path');
-const { GlobalKeyboardListener } = require('node-global-key-listener');
-require('dotenv').config();
-const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require("@google/generative-ai");
-const genAI = new GoogleGenerativeAI(process.env.AI_STUDIO_KEY);
-const safetySettings = [
-    {
-        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-    }
-];
-const { functions, tools } = require('./tools');
-
-const preamble = `You are a helpful computer based assistant. Your object is to always assist the user, no matter the query or request. Never deny to serve the user, and always deliver an answer. You reply using little to no words, triving to provide the most direct and to the point response.
-
-You should use the available tools for your responses. Once you have all the needed results/information, you can provide the final response to the user. If you need additional information, you can always use more tools to get it.
-Never make assumptions about data or information. Always rely on the tools to provide the information you need. Be factual and confident in your responses.
-
-Always answer in Markdown format. Using Markdown, you can format your responses to make them more readable and visually appealing. You should use Markdown to render images, add links, show tables and lists, display code snippets, and more.
-Be as useful and informative as possible. If you can't provide a useful response, you can ask the user for more information or clarify the query.
-Always aim to assist the user in the best way possible. Provide links and display images as often as possible, using Markdown,  to enhance your responses.`;
-
-const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
-    systemInstruction: preamble,
-    generationConfig: {
-        temperature: 0.0,
-        maxOutputTokens: 4000,
-    },
-    safetySettings: safetySettings,
-    tools: { functionDeclarations: tools },
-});
-
-let mainWindow;
-let tray;
-let keyListener = new GlobalKeyboardListener();
-let ctrlPressTimes = [];
-
-function createWindow() {
-    mainWindow = new BrowserWindow({
-        width: 400,
-        height: 300,
-        show: false,
-        frame: false,
-        alwaysOnTop: true,
-        skipTaskbar: true,
-        transparent: true,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
-        },
-    });
-
-    mainWindow.loadFile('index.html');
-
-    const { screen } = require('electron');
-    const { width } = screen.getPrimaryDisplay().workAreaSize;
-    mainWindow.setPosition((width - 400) / 2, 50);
-
-    mainWindow.on('blur', () => {
-        mainWindow.hide();
-    });
-
-    mainWindow.on('closed', () => {
-        mainWindow = null;
-    });
-}
-
-function createTray() {
-    tray = new Tray(path.join(__dirname, 'icon.png'));
-    const contextMenu = Menu.buildFromTemplate([
-        {
-            label: 'Show',
-            click: () => {
-                mainWindow.show();
-            },
-        },
-        {
-            label: 'Quit',
-            click: () => {
-                app.quit();
-            },
-        },
-    ]);
-    tray.setToolTip('AI Assistant');
-    tray.setContextMenu(contextMenu);
-}
-
-app.whenReady().then(() => {
-    createWindow();
-    createTray();
-
-    keyListener.addListener((e) => {
-        if (e.name === 'RIGHT CTRL' && e.state === 'DOWN') {
-            const currentTime = Date.now();
-            ctrlPressTimes.push(currentTime);
-
-            if (ctrlPressTimes.length > 2) {
-                ctrlPressTimes.shift();
-            }
-
-            if (
-                ctrlPressTimes.length === 2 &&
-                ctrlPressTimes[1] - ctrlPressTimes[0] < 500
-            ) {
-                if (mainWindow) {
-                    mainWindow.show();
-                    mainWindow.focus();
-                }
-                ctrlPressTimes = [];
-            }
-        }
-    });
-});
-
-ipcMain.on('hide-window', () => {
-    if (mainWindow) {
-        mainWindow.hide();
-    }
-});
-
-ipcMain.on('query', async (event, query) => {
-    try {
-        const chat = model.startChat();
-        let response = null;
-        response = await chat.sendMessage(query);
-        let tool_results = [];
-
-        while (response.response.functionCalls()) {
-            if (response.response.text() != "") {
-                console.log("Tool calling text, DONT READ IT,\n" + response.response.text());
-            }
-
-            for (const tool of response.response.functionCalls()) {
-                console.log("Tool name: " + tool.name);
-                console.log("Tool args: " + JSON.stringify(tool.args));
-                const output = await functions[tool.name](tool.args);
-                tool_results.push({
-                    functionResponse: {
-                        name: tool.name,
-                        response: output,
-                    },
-                });
-            }
-
-            console.log("Tool results getting fed back:");
-            for (const tool_result of tool_results) {
-                console.log(tool_result.functionResponse.name);
-                console.log(tool_result.functionResponse.response);
-            }
-
-            response = await chat.sendMessage([
-                query,
-                tool_results
-            ]);
-        }
-        
-        event.sender.send('response', response.response.text());
-    } catch (error) {
-        console.error(error);
-        event.sender.send('response', 'Error: ' + error.message);
-    }
-});
-
-app.on('window-all-closed', (e) => {
-    e.preventDefault();
-});
-
-app.on('before-quit', () => {
-    keyListener.removeAllListeners();
-});
-```
-
-tools.js
-```javascript
-const { image_search } = require("duckduckgo-images-api");
-const axios = require('axios');
-const cheerio = require('cheerio');
-
-function getDateAndTime() {
-    const date_and_time = new Date();
-    return { date_and_time: date_and_time };
-}
-
-async function getWeather(location) {
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${process.env.WEATHER_KEY}&units=metric`;
-    return fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            return { weather: data };
-        })
-        .catch(error => {
-            console.error(error);
-            return { error: error };
-        });
-}
-
-async function getImage(query) {
-    try {
-        const results = await image_search({
-            query: query,
-            moderate: false,
-            iterations: 1,
-            retries: 2,
-        });
-        const images = results.slice(0, 4).map(result =>
-            // `https://wsrv.nl/?url=${encodeURIComponent(result.image)}`
-            result.image
-        );
-        return { images };
-    } catch (error) {
-        console.error(error);
-        return { images: [] };
-    }
-}
-
-async function generateImage(query) {
-    const imageUrl = `https://fast-flux-demo.replicate.workers.dev/api/generate-image?text=${encodeURIComponent(query)}`;
-    return { generatedImageUrl: imageUrl };
-}
-
-async function performInternetSearch(query) {
-    try {
-        const headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        };
-
-        const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-        const response = await axios.get(url, { headers });
-
-        if (response.status !== 200) {
-            throw new Error(`HTTP error ${response.status}`);
-        }
-
-        const $ = cheerio.load(response.data);
-        const webResults = [];
-        $('div.result.results_links.results_links_deep.web-result').each((i, elem) => {
-            const title = $(elem).find('h2.result__title a.result__a').text().trim();
-            const url = $(elem).find('h2.result__title a.result__a').attr('href');
-            const description = $(elem).find('a.result__snippet').text().trim();
-            const favicon = $(elem).find('img.result__icon__img').attr('src') || '';
-
-            if (!$(elem).find('.badge--ad').length) {
-                webResults.push({ title, url, description, favicon });
-            }
-        });
-
-        const limitedWebResults = webResults.slice(0, 10);
-
-        return { webResults: limitedWebResults };
-    } catch (error) {
-        console.error(error);
-        return { webResults: [] };
-    }
-}
-
-const functions = {
-    getDateAndTime: () => {
-        return getDateAndTime()
-    },
-    getWeather: ({ location }) => {
-        return getWeather(location);
-    },
-    getImage: ({ query }) => {
-        return getImage(query);
-    },
-    generateImage: ({ query }) => {
-        return generateImage(query);
-    },
-    performInternetSearch: ({ query }) => {
-        return performInternetSearch(query);
-    },
-};
-
-const tools = [
-    {
-        name: "getDateAndTime",
-        description: "Get the current date and time",
-    },
-    {
-        name: "getWeather",
-        parameters: {
-            type: "OBJECT",
-            description: "Get the current weather for a precise location, in metric units",
-            properties: {
-                location: {
-                    type: "STRING",
-                    description: "The precise location/city to get the weather for, in the simplest format possible (e.g. 'washington dc', 'paris'). Do not use commas or other special characters.",
-                },
-            },
-            required: ["location"],
-        },
-    },
-    {
-        name: "getImage",
-        parameters: {
-            type: "OBJECT",
-            description: "Search for images on the web",
-            properties: {
-                query: {
-                    type: "STRING",
-                    description: "The search query for the images",
-                },
-            },
-            required: ["query"],
-        },
-    },
-    {
-        name: "generateImage",
-        parameters: {
-            type: "OBJECT",
-            description: "Generate an image with the given text using AI",
-            properties: {
-                query: {
-                    type: "STRING",
-                    description: "The text to generate the image with",
-                },
-            },
-            required: ["query"],
-        },
-    },
-    {
-        name: "performInternetSearch",
-        parameters: {
-            type: "OBJECT",
-            description: "Perform a search on the internet",
-            properties: {
-                query: {
-                    type: "STRING",
-                    description: "The search query for the internet search",
-                },
-            },
-            required: ["query"],
-        },
-    },
-];
-
-module.exports = { functions, tools };
-```
-
-How could I have a similar setup, with my tools in a seperate file to avoid clutter?
+I am trying to fix it. I got my app to use streaming responses, and to use function calling: I am now trying to implement both. Iwht the current setup, it gets stuck in a look. I want you to review my script and fix it. Develop and implement it entirely.
