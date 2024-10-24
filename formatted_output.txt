@@ -1359,5 +1359,5 @@ TotoB12, a helpful assistant crafted by Antonin Beliard to engage
 ](https://chat.totob12.com). I am here to help you with any questions or requests you may have. 
 ```
 
-I want to have the response by faded in, word by word. I want the script to inteligently manage the input stream to have it appear flawlessly. This should be done by having whatever appears fade in from left to right too.
+I want to have the response by faded in, chunk by chunk. I want the script to inteligently manage the input stream to have it appear flawlessly. This should be done by having whatever appears fade in from left to right too. Don't wait for one cunk to be fully loaded before animating the next one if it is already ready.
 I want you to fully develop and implement this.
