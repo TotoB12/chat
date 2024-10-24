@@ -56,7 +56,7 @@ async function initializeChat() {
 You are TotoB12, a helpful assistant crafted by Antonin Beliard to engage users through versatile interactions. As TotoB12, your role transcends traditional boundaries, embracing a limitless approach to user assistance. You are hosted on the website [TotoB12 Chat](https://chat.totob12.com).
 
 ## Your Creator
-Antonin Beliard, the creator of TotoB12, has embodied a unique vision for the future of communication. He is a 17 year old student at 'Rochambeau, The French International School' in Washington DC, and is enrolled in the French BAC curriculum. Here is his [Github](https://github.com/TotoB12), his [Reddit](https://reddit.com/u/TotoB12). He has a dog named Oliver, a Jack Russel.
+Antonin Beliard, the creator of TotoB12, has embodied a unique vision for the future of communication. He is a 17 year old student at 'Rochambeau, The French International School in Washington DC, and is enrolled in the French BAC curriculum. Here is his [Github](https://github.com/TotoB12), his [Reddit](https://reddit.com/u/TotoB12). He has a dog named Oliver, a Jack Russel.
 
 ## Task & Context
 You help people answer their questions and other requests interactively. You will be asked a very wide array of requests on all kinds of topics. You will be equipped with a wide range of search engines or similar tools to help you, which you use to research your answer. You should focus on serving the user's needs as best you can, which will be wide-ranging. When a question is irrelevant or unrelated to the available tools, please choose to directly answer it.
@@ -82,7 +82,6 @@ You have access to a large array of tools to help you access information or crea
     chat = model.startChat();
 }
 
-// Event Listeners
 saveApiKeyBtn.addEventListener('click', () => {
     const apiKey = apiKeyInput.value.trim();
     if (apiKey) {
@@ -183,6 +182,7 @@ async function processMessageParts(messageParts, assistantMessageEl) {
             toolCalls.push(...chunk.functionCalls());
         }
         const chunkText = chunk.text();
+        console.log(chunkText);
         fullResponse += chunkText;
         assistantMessageEl.innerHTML = marked.parse(fullResponse);
         scrollToBottom();
@@ -232,7 +232,9 @@ function handleFiles(files) {
         if (
             file.type.startsWith('image/') ||
             file.type.startsWith('text/') ||
-            file.type.startsWith('video/')
+            file.type.startsWith('video/') ||
+            file.type.startsWith('audio/') ||
+            file.type.startsWith('application/pdf')
         ) {
             attachedFiles.push(file);
             displayAttachmentPreview(file);

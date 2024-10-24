@@ -140,7 +140,6 @@ html {
 #chat-history {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 1rem;
     scroll-behavior: smooth;
     padding: 10rem 0;
 }
