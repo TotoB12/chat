@@ -1,5 +1,34 @@
 I am working on a simple and quick AI chat web app. Here is the full project:
 
+dump\server.js
+```javascript
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+
+const app = express();
+const PORT = 8000;
+
+app.use(express.static('public'));
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+app.get('/style.css', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'style.css'));
+});
+app.get('/script.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'script.js'));
+});
+app.get('/temp.png', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'temp.png'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Server listening on http://localhost:${PORT}`);
+});
+
+```
+
 public\index.html
 ```html
 <!DOCTYPE html>
@@ -156,6 +185,15 @@ public\index.html
 </body>
 
 </html>
+```
+
+public\require.js
+```javascript
+/** vim: et:ts=4:sw=4:sts=4
+ * @license RequireJS 2.3.7 Copyright jQuery Foundation and other contributors.
+ * Released under MIT license, https://github.com/requirejs/requirejs/blob/master/LICENSE
+ */
+var requirejs,require,define;!function(global,setTimeout){var req,s,head,baseElement,dataMain,src,interactiveScript,currentlyAddingScript,mainScript,subPath,version="2.3.7",commentRegExp=/\/\*[\s\S]*?\*\/|([^:"'=]|^)\/\/.*$/gm,cjsRequireRegExp=/[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,jsSuffixRegExp=/\.js$/,currDirRegExp=/^\.\//,op=Object.prototype,ostring=op.toString,hasOwn=op.hasOwnProperty,isBrowser=!("undefined"==typeof window||"undefined"==typeof navigator||!window.document),isWebWorker=!isBrowser&&"undefined"!=typeof importScripts,readyRegExp=isBrowser&&"PLAYSTATION 3"===navigator.platform?/^complete$/:/^(complete|loaded)$/,defContextName="_",isOpera="undefined"!=typeof opera&&"[object Opera]"===opera.toString(),contexts={},cfg={},globalDefQueue=[],useInteractive=!1,disallowedProps=["__proto__","constructor"];function commentReplace(e,t){return t||""}function isFunction(e){return"[object Function]"===ostring.call(e)}function isArray(e){return"[object Array]"===ostring.call(e)}function each(e,t){if(e)for(var i=0;i<e.length&&(!e[i]||!t(e[i],i,e));i+=1);}function eachReverse(e,t){if(e)for(var i=e.length-1;-1<i&&(!e[i]||!t(e[i],i,e));--i);}function hasProp(e,t){return hasOwn.call(e,t)}function getOwn(e,t){return hasProp(e,t)&&e[t]}function eachProp(e,t){for(var i in e)if(hasProp(e,i)&&-1==disallowedProps.indexOf(i)&&t(e[i],i))break}function mixin(i,e,r,n){e&&eachProp(e,function(e,t){!r&&hasProp(i,t)||(!n||"object"!=typeof e||!e||isArray(e)||isFunction(e)||e instanceof RegExp?i[t]=e:(i[t]||(i[t]={}),mixin(i[t],e,r,n)))})}function bind(e,t){return function(){return t.apply(e,arguments)}}function scripts(){return document.getElementsByTagName("script")}function defaultOnError(e){throw e}function getGlobal(e){var t;return e&&(t=global,each(e.split("."),function(e){t=t[e]}),t)}function makeError(e,t,i,r){t=new Error(t+"\nhttps://requirejs.org/docs/errors.html#"+e);return t.requireType=e,t.requireModules=r,i&&(t.originalError=i),t}if(void 0===define){if(void 0!==requirejs){if(isFunction(requirejs))return;cfg=requirejs,requirejs=void 0}void 0===require||isFunction(require)||(cfg=require,require=void 0),req=requirejs=function(e,t,i,r){var n,o=defContextName;return isArray(e)||"string"==typeof e||(n=e,isArray(t)?(e=t,t=i,i=r):e=[]),n&&n.context&&(o=n.context),r=(r=getOwn(contexts,o))||(contexts[o]=req.s.newContext(o)),n&&r.configure(n),r.require(e,t,i)},req.config=function(e){return req(e)},req.nextTick=void 0!==setTimeout?function(e){setTimeout(e,4)}:function(e){e()},require=require||req,req.version=version,req.jsExtRegExp=/^\/|:|\?|\.js$/,req.isBrowser=isBrowser,s=req.s={contexts:contexts,newContext:newContext},req({}),each(["toUrl","undef","defined","specified"],function(t){req[t]=function(){var e=contexts[defContextName];return e.require[t].apply(e,arguments)}}),isBrowser&&(head=s.head=document.getElementsByTagName("head")[0],baseElement=document.getElementsByTagName("base")[0],baseElement)&&(head=s.head=baseElement.parentNode),req.onError=defaultOnError,req.createNode=function(e,t,i){var r=e.xhtml?document.createElementNS("http://www.w3.org/1999/xhtml","html:script"):document.createElement("script");return r.type=e.scriptType||"text/javascript",r.charset="utf-8",r.async=!0,r},req.load=function(t,i,r){var e,n=t&&t.config||{};if(isBrowser)return(e=req.createNode(n,i,r)).setAttribute("data-requirecontext",t.contextName),e.setAttribute("data-requiremodule",i),!e.attachEvent||e.attachEvent.toString&&e.attachEvent.toString().indexOf("[native code")<0||isOpera?(e.addEventListener("load",t.onScriptLoad,!1),e.addEventListener("error",t.onScriptError,!1)):(useInteractive=!0,e.attachEvent("onreadystatechange",t.onScriptLoad)),e.src=r,n.onNodeCreated&&n.onNodeCreated(e,n,i,r),currentlyAddingScript=e,baseElement?head.insertBefore(e,baseElement):head.appendChild(e),currentlyAddingScript=null,e;if(isWebWorker)try{setTimeout(function(){},0),importScripts(r),t.completeLoad(i)}catch(e){t.onError(makeError("importscripts","importScripts failed for "+i+" at "+r,e,[i]))}},isBrowser&&!cfg.skipDataMain&&eachReverse(scripts(),function(e){if(head=head||e.parentNode,dataMain=e.getAttribute("data-main"))return mainScript=dataMain,cfg.baseUrl||-1!==mainScript.indexOf("!")||(mainScript=(src=mainScript.split("/")).pop(),subPath=src.length?src.join("/")+"/":"./",cfg.baseUrl=subPath),mainScript=mainScript.replace(jsSuffixRegExp,""),req.jsExtRegExp.test(mainScript)&&(mainScript=dataMain),cfg.deps=cfg.deps?cfg.deps.concat(mainScript):[mainScript],!0}),define=function(e,i,t){var r,n;"string"!=typeof e&&(t=i,i=e,e=null),isArray(i)||(t=i,i=null),!i&&isFunction(t)&&(i=[],t.length)&&(t.toString().replace(commentRegExp,commentReplace).replace(cjsRequireRegExp,function(e,t){i.push(t)}),i=(1===t.length?["require"]:["require","exports","module"]).concat(i)),useInteractive&&(r=currentlyAddingScript||getInteractiveScript())&&(e=e||r.getAttribute("data-requiremodule"),n=contexts[r.getAttribute("data-requirecontext")]),n?(n.defQueue.push([e,i,t]),n.defQueueMap[e]=!0):globalDefQueue.push([e,i,t])},define.amd={jQuery:!0},req.exec=function(text){return eval(text)},req(cfg)}function newContext(u){var t,e,f,c,i,b={waitSeconds:7,baseUrl:"./",paths:{},bundles:{},pkgs:{},shim:{},config:{}},d={},p={},r={},l=[],h={},n={},m={},g=1,x=1;function v(e,t,i){var r,n,o,a,s,u,c,d,p,f=t&&t.split("/"),l=b.map,h=l&&l["*"];if(e){t=(e=e.split("/")).length-1,b.nodeIdCompat&&jsSuffixRegExp.test(e[t])&&(e[t]=e[t].replace(jsSuffixRegExp,""));for(var m,g=e="."===e[0].charAt(0)&&f?f.slice(0,f.length-1).concat(e):e,x=0;x<g.length;x++)"."===(m=g[x])?(g.splice(x,1),--x):".."!==m||0===x||1===x&&".."===g[2]||".."===g[x-1]||0<x&&(g.splice(x-1,2),x-=2);e=e.join("/")}if(i&&l&&(f||h)){e:for(o=(n=e.split("/")).length;0<o;--o){if(s=n.slice(0,o).join("/"),f)for(a=f.length;0<a;--a)if(r=(r=getOwn(l,f.slice(0,a).join("/")))&&getOwn(r,s)){u=r,c=o;break e}!d&&h&&getOwn(h,s)&&(d=getOwn(h,s),p=o)}!u&&d&&(u=d,c=p),u&&(n.splice(0,c,u),e=n.join("/"))}return getOwn(b.pkgs,e)||e}function q(t){isBrowser&&each(scripts(),function(e){if(e.getAttribute("data-requiremodule")===t&&e.getAttribute("data-requirecontext")===f.contextName)return e.parentNode.removeChild(e),!0})}function E(e){var t=getOwn(b.paths,e);return t&&isArray(t)&&1<t.length&&(t.shift(),f.require.undef(e),f.makeRequire(null,{skipMap:!0})([e]),1)}function w(e){var t,i=e?e.indexOf("!"):-1;return-1<i&&(t=e.substring(0,i),e=e.substring(i+1,e.length)),[t,e]}function y(e,t,i,r){var n,o,a,s=null,u=t?t.name:null,c=e,d=!0,p="";return e||(d=!1,e="_@r"+(g+=1)),s=(a=w(e))[0],e=a[1],s&&(s=v(s,u,r),o=getOwn(h,s)),e&&(s?p=i?e:o&&o.normalize?o.normalize(e,function(e){return v(e,u,r)}):-1===e.indexOf("!")?v(e,u,r):e:(s=(a=w(p=v(e,u,r)))[0],i=!0,n=f.nameToUrl(p=a[1]))),{prefix:s,name:p,parentMap:t,unnormalized:!!(e=!s||o||i?"":"_unnormalized"+(x+=1)),url:n,originalName:c,isDefine:d,id:(s?s+"!"+p:p)+e}}function S(e){var t=e.id;return getOwn(d,t)||(d[t]=new f.Module(e))}function k(e,t,i){var r=e.id,n=getOwn(d,r);!hasProp(h,r)||n&&!n.defineEmitComplete?(n=S(e)).error&&"error"===t?i(n.error):n.on(t,i):"defined"===t&&i(h[r])}function M(t,e){var i=t.requireModules,r=!1;e?e(t):(each(i,function(e){e=getOwn(d,e);e&&(e.error=t,e.events.error)&&(r=!0,e.emit("error",t))}),r||req.onError(t))}function O(){globalDefQueue.length&&(each(globalDefQueue,function(e){var t=e[0];"string"==typeof t&&(f.defQueueMap[t]=!0),l.push(e)}),globalDefQueue=[])}function j(e){delete d[e],delete p[e]}function P(){var r,e=1e3*b.waitSeconds,n=e&&f.startTime+e<(new Date).getTime(),o=[],a=[],s=!1,u=!0;if(!t){if(t=!0,eachProp(p,function(e){var t=e.map,i=t.id;if(e.enabled&&(t.isDefine||a.push(e),!e.error))if(!e.inited&&n)E(i)?s=r=!0:(o.push(i),q(i));else if(!e.inited&&e.fetched&&t.isDefine&&(s=!0,!t.prefix))return u=!1}),n&&o.length)return(e=makeError("timeout","Load timeout for modules: "+o,null,o)).contextName=f.contextName,M(e);u&&each(a,function(e){!function r(n,o,a){var e=n.map.id;n.error?n.emit("error",n.error):(o[e]=!0,each(n.depMaps,function(e,t){var e=e.id,i=getOwn(d,e);!i||n.depMatched[t]||a[e]||(getOwn(o,e)?(n.defineDep(t,h[e]),n.check()):r(i,o,a))}),a[e]=!0)}(e,{},{})}),n&&!r||!s||(isBrowser||isWebWorker)&&(i=i||setTimeout(function(){i=0,P()},50)),t=!1}}function a(e){hasProp(h,e[0])||S(y(e[0],null,!0)).init(e[1],e[2])}function o(e,t,i,r){e.detachEvent&&!isOpera?r&&e.detachEvent(r,t):e.removeEventListener(i,t,!1)}function s(e){e=e.currentTarget||e.srcElement;return o(e,f.onScriptLoad,"load","onreadystatechange"),o(e,f.onScriptError,"error"),{node:e,id:e&&e.getAttribute("data-requiremodule")}}function R(){var e;for(O();l.length;){if(null===(e=l.shift())[0])return M(makeError("mismatch","Mismatched anonymous define() module: "+e[e.length-1]));a(e)}f.defQueueMap={}}return c={require:function(e){return e.require||(e.require=f.makeRequire(e.map))},exports:function(e){if(e.usingExports=!0,e.map.isDefine)return e.exports?h[e.map.id]=e.exports:e.exports=h[e.map.id]={}},module:function(e){return e.module||(e.module={id:e.map.id,uri:e.map.url,config:function(){return getOwn(b.config,e.map.id)||{}},exports:e.exports||(e.exports={})})}},(e=function(e){this.events=getOwn(r,e.id)||{},this.map=e,this.shim=getOwn(b.shim,e.id),this.depExports=[],this.depMaps=[],this.depMatched=[],this.pluginMaps={},this.depCount=0}).prototype={init:function(e,t,i,r){r=r||{},this.inited||(this.factory=t,i?this.on("error",i):this.events.error&&(i=bind(this,function(e){this.emit("error",e)})),this.depMaps=e&&e.slice(0),this.errback=i,this.inited=!0,this.ignore=r.ignore,r.enabled||this.enabled?this.enable():this.check())},defineDep:function(e,t){this.depMatched[e]||(this.depMatched[e]=!0,--this.depCount,this.depExports[e]=t)},fetch:function(){if(!this.fetched){this.fetched=!0,f.startTime=(new Date).getTime();var e=this.map;if(!this.shim)return e.prefix?this.callPlugin():this.load();f.makeRequire(this.map,{enableBuildCallback:!0})(this.shim.deps||[],bind(this,function(){return e.prefix?this.callPlugin():this.load()}))}},load:function(){var e=this.map.url;n[e]||(n[e]=!0,f.load(this.map.id,e))},check:function(){if(this.enabled&&!this.enabling){var t,i,e=this.map.id,r=this.depExports,n=this.exports,o=this.factory;if(this.inited){if(this.error)this.emit("error",this.error);else if(!this.defining){if(this.defining=!0,this.depCount<1&&!this.defined){if(isFunction(o)){if(this.events.error&&this.map.isDefine||req.onError!==defaultOnError)try{n=f.execCb(e,o,r,n)}catch(e){t=e}else n=f.execCb(e,o,r,n);if(this.map.isDefine&&void 0===n&&((r=this.module)?n=r.exports:this.usingExports&&(n=this.exports)),t)return t.requireMap=this.map,t.requireModules=this.map.isDefine?[this.map.id]:null,t.requireType=this.map.isDefine?"define":"require",M(this.error=t)}else n=o;this.exports=n,this.map.isDefine&&!this.ignore&&(h[e]=n,req.onResourceLoad)&&(i=[],each(this.depMaps,function(e){i.push(e.normalizedMap||e)}),req.onResourceLoad(f,this.map,i)),j(e),this.defined=!0}this.defining=!1,this.defined&&!this.defineEmitted&&(this.defineEmitted=!0,this.emit("defined",this.exports),this.defineEmitComplete=!0)}}else hasProp(f.defQueueMap,e)||this.fetch()}},callPlugin:function(){var s=this.map,u=s.id,e=y(s.prefix);this.depMaps.push(e),k(e,"defined",bind(this,function(e){var o,t,i=getOwn(m,this.map.id),r=this.map.name,n=this.map.parentMap?this.map.parentMap.name:null,a=f.makeRequire(s.parentMap,{enableBuildCallback:!0});this.map.unnormalized?(e.normalize&&(r=e.normalize(r,function(e){return v(e,n,!0)})||""),k(t=y(s.prefix+"!"+r,this.map.parentMap,!0),"defined",bind(this,function(e){this.map.normalizedMap=t,this.init([],function(){return e},null,{enabled:!0,ignore:!0})})),(r=getOwn(d,t.id))&&(this.depMaps.push(t),this.events.error&&r.on("error",bind(this,function(e){this.emit("error",e)})),r.enable())):i?(this.map.url=f.nameToUrl(i),this.load()):((o=bind(this,function(e){this.init([],function(){return e},null,{enabled:!0})})).error=bind(this,function(e){this.inited=!0,(this.error=e).requireModules=[u],eachProp(d,function(e){0===e.map.id.indexOf(u+"_unnormalized")&&j(e.map.id)}),M(e)}),o.fromText=bind(this,function(e,t){var i=s.name,r=y(i),n=useInteractive;t&&(e=t),n&&(useInteractive=!1),S(r),hasProp(b.config,u)&&(b.config[i]=b.config[u]);try{req.exec(e)}catch(e){return M(makeError("fromtexteval","fromText eval for "+u+" failed: "+e,e,[u]))}n&&(useInteractive=!0),this.depMaps.push(r),f.completeLoad(i),a([i],o)}),e.load(s.name,a,o,b))})),f.enable(e,this),this.pluginMaps[e.id]=e},enable:function(){(p[this.map.id]=this).enabled=!0,this.enabling=!0,each(this.depMaps,bind(this,function(e,t){var i,r;if("string"==typeof e){if(e=y(e,this.map.isDefine?this.map:this.map.parentMap,!1,!this.skipMap),this.depMaps[t]=e,r=getOwn(c,e.id))return void(this.depExports[t]=r(this));this.depCount+=1,k(e,"defined",bind(this,function(e){this.undefed||(this.defineDep(t,e),this.check())})),this.errback?k(e,"error",bind(this,this.errback)):this.events.error&&k(e,"error",bind(this,function(e){this.emit("error",e)}))}r=e.id,i=d[r],hasProp(c,r)||!i||i.enabled||f.enable(e,this)})),eachProp(this.pluginMaps,bind(this,function(e){var t=getOwn(d,e.id);t&&!t.enabled&&f.enable(e,this)})),this.enabling=!1,this.check()},on:function(e,t){(this.events[e]||(this.events[e]=[])).push(t)},emit:function(e,t){each(this.events[e],function(e){e(t)}),"error"===e&&delete this.events[e]}},(f={config:b,contextName:u,registry:d,defined:h,urlFetched:n,defQueue:l,defQueueMap:{},Module:e,makeModuleMap:y,nextTick:req.nextTick,onError:M,configure:function(e){e.baseUrl&&"/"!==e.baseUrl.charAt(e.baseUrl.length-1)&&(e.baseUrl+="/"),"string"==typeof e.urlArgs&&(i=e.urlArgs,e.urlArgs=function(e,t){return(-1===t.indexOf("?")?"?":"&")+i});var i,r=b.shim,n={paths:!0,bundles:!0,config:!0,map:!0};eachProp(e,function(e,t){n[t]?(b[t]||(b[t]={}),mixin(b[t],e,!0,!0)):b[t]=e}),e.bundles&&eachProp(e.bundles,function(e,t){each(e,function(e){e!==t&&(m[e]=t)})}),e.shim&&(eachProp(e.shim,function(e,t){!(e=isArray(e)?{deps:e}:e).exports&&!e.init||e.exportsFn||(e.exportsFn=f.makeShimExports(e)),r[t]=e}),b.shim=r),e.packages&&each(e.packages,function(e){var t=(e="string"==typeof e?{name:e}:e).name;e.location&&(b.paths[t]=e.location),b.pkgs[t]=e.name+"/"+(e.main||"main").replace(currDirRegExp,"").replace(jsSuffixRegExp,"")}),eachProp(d,function(e,t){e.inited||e.map.unnormalized||(e.map=y(t,null,!0))}),(e.deps||e.callback)&&f.require(e.deps||[],e.callback)},makeShimExports:function(t){return function(){var e;return(e=t.init?t.init.apply(global,arguments):e)||t.exports&&getGlobal(t.exports)}},makeRequire:function(o,a){function s(e,t,i){var r,n;return a.enableBuildCallback&&t&&isFunction(t)&&(t.__requireJsBuild=!0),"string"==typeof e?isFunction(t)?M(makeError("requireargs","Invalid require call"),i):o&&hasProp(c,e)?c[e](d[o.id]):req.get?req.get(f,e,o,s):(r=y(e,o,!1,!0).id,hasProp(h,r)?h[r]:M(makeError("notloaded",'Module name "'+r+'" has not been loaded yet for context: '+u+(o?"":". Use require([])")))):(R(),f.nextTick(function(){R(),(n=S(y(null,o))).skipMap=a.skipMap,n.init(e,t,i,{enabled:!0}),P()}),s)}return a=a||{},mixin(s,{isBrowser:isBrowser,toUrl:function(e){var t,i=e.lastIndexOf("."),r=e.split("/")[0];return-1!==i&&(!("."===r||".."===r)||1<i)&&(t=e.substring(i,e.length),e=e.substring(0,i)),f.nameToUrl(v(e,o&&o.id,!0),t,!0)},defined:function(e){return hasProp(h,y(e,o,!1,!0).id)},specified:function(e){return e=y(e,o,!1,!0).id,hasProp(h,e)||hasProp(d,e)}}),o||(s.undef=function(i){O();var e=y(i,o,!0),t=getOwn(d,i);t.undefed=!0,q(i),delete h[i],delete n[e.url],delete r[i],eachReverse(l,function(e,t){e[0]===i&&l.splice(t,1)}),delete f.defQueueMap[i],t&&(t.events.defined&&(r[i]=t.events),j(i))}),s},enable:function(e){getOwn(d,e.id)&&S(e).enable()},completeLoad:function(e){var t,i,r,n=getOwn(b.shim,e)||{},o=n.exports;for(O();l.length;){if(null===(i=l.shift())[0]){if(i[0]=e,t)break;t=!0}else i[0]===e&&(t=!0);a(i)}if(f.defQueueMap={},r=getOwn(d,e),!t&&!hasProp(h,e)&&r&&!r.inited){if(!(!b.enforceDefine||o&&getGlobal(o)))return E(e)?void 0:M(makeError("nodefine","No define call for "+e,null,[e]));a([e,n.deps||[],n.exportsFn])}P()},nameToUrl:function(e,t,i){var r,n,o,a,s,u=getOwn(b.pkgs,e);if(u=getOwn(m,e=u?u:e))return f.nameToUrl(u,t,i);if(req.jsExtRegExp.test(e))a=e+(t||"");else{for(r=b.paths,o=(n=e.split("/")).length;0<o;--o)if(s=getOwn(r,n.slice(0,o).join("/"))){isArray(s)&&(s=s[0]),n.splice(0,o,s);break}a=n.join("/"),a=("/"===(a+=t||(/^data\:|^blob\:|\?/.test(a)||i?"":".js")).charAt(0)||a.match(/^[\w\+\.\-]+:/)?"":b.baseUrl)+a}return b.urlArgs&&!/^blob\:/.test(a)?a+b.urlArgs(e,a):a},load:function(e,t){req.load(f,e,t)},execCb:function(e,t,i,r){return t.apply(r,i)},onScriptLoad:function(e){"load"!==e.type&&!readyRegExp.test((e.currentTarget||e.srcElement).readyState)||(interactiveScript=null,e=s(e),f.completeLoad(e.id))},onScriptError:function(e){var i,r=s(e);if(!E(r.id))return i=[],eachProp(d,function(e,t){0!==t.indexOf("_@r")&&each(e.depMaps,function(e){if(e.id===r.id)return i.push(t),!0})}),M(makeError("scripterror",'Script error for "'+r.id+(i.length?'", needed by: '+i.join(", "):'"'),e,[r.id]))}}).require=f.makeRequire(),f}function getInteractiveScript(){return interactiveScript&&"interactive"===interactiveScript.readyState||eachReverse(scripts(),function(e){if("interactive"===e.readyState)return interactiveScript=e}),interactiveScript}}(this,"undefined"==typeof setTimeout?void 0:setTimeout);
 ```
 
 public\script.js
@@ -323,6 +361,8 @@ async function handleSubmit() {
         // Add assistant message placeholder
         const assistantMessageEl = addMessageToChat('assistant', '');
 
+        console.log(messageParts);
+
         // Start processing the message parts
         await processMessageParts(messageParts, assistantMessageEl);
     } catch (error) {
@@ -344,6 +384,7 @@ async function processMessageParts(messageParts, assistantMessageEl) {
             toolCalls.push(...chunk.functionCalls());
         }
         const chunkText = chunk.text();
+        console.log(chunkText);
         fullResponse += chunkText;
         assistantMessageEl.innerHTML = marked.parse(fullResponse);
         scrollToBottom();
@@ -1350,14 +1391,728 @@ export const tools = [
 ];
 ```
 
-This all works well, but I want to add new features. I want to improve the way that the generate text appears on the screen. The current setup has the response appear chunk by chunk. Here is an example of how the chunks come in:
+This all works well, but there are a few issues. I noticed that with the current setup, the AI has no history of the chat whatsoever. I want the AI to stay on the same chat through out the conversation. I have the following documentation to help:
 
 ```
-I am
-TotoB12, a helpful assistant crafted by Antonin Beliard to engage
- users through versatile interactions. I am hosted on the website [TotoB12 Chat
-](https://chat.totob12.com). I am here to help you with any questions or requests you may have. 
+Build an interactive chat
+You can use the Gemini API to build interactive chat experiences for your users. Using the chat feature of the API lets you collect multiple rounds of questions and responses, allowing users to step incrementally toward answers or get help with multipart problems. This feature is ideal for applications that require ongoing communication, such as chatbots, interactive tutors, or customer support assistants.
+
+The following code example shows a basic chat implementation:
+
+
+// Make sure to include these imports:
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const chat = model.startChat({
+  history: [
+    {
+      role: "user",
+      parts: [{ text: "Hello" }],
+    },
+    {
+      role: "model",
+      parts: [{ text: "Great to meet you. What would you like to know?" }],
+    },
+  ],
+});
+let result = await chat.sendMessage("I have 2 dogs in my house.");
+console.log(result.response.text());
+result = await chat.sendMessage("How many paws are in my house?");
+console.log(result.response.text());
+
+Enable chat streaming
+You can also use streaming with chat, as shown in the following example:
+
+
+// Make sure to include these imports:
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const chat = model.startChat({
+  history: [
+    {
+      role: "user",
+      parts: [{ text: "Hello" }],
+    },
+    {
+      role: "model",
+      parts: [{ text: "Great to meet you. What would you like to know?" }],
+    },
+  ],
+});
+let result = await chat.sendMessageStream("I have 2 dogs in my house.");
+for await (const chunk of result.stream) {
+  const chunkText = chunk.text();
+  process.stdout.write(chunkText);
+}
+result = await chat.sendMessageStream("How many paws are in my house?");
+for await (const chunk of result.stream) {
+  const chunkText = chunk.text();
+  process.stdout.write(chunkText);
+}
+
+Explore document processing capabilities with the Gemini API
+
+Python Node.js Go REST
+
+The Gemini API can process and run inference on PDF documents passed to it. When a PDF is uploaded, the Gemini API can:
+
+Describe or answer questions about the content
+Summarize the content
+Extrapolate from the content
+This tutorial demonstrates some possible ways to prompt the Gemini API with provided PDF documents. All output is text-only.
+
+Before you begin: Set up your project and API key
+Before calling the Gemini API, you need to set up your project and configure your API key.
+
+ Expand to view how to set up your project and API key
+
+Technical details
+Gemini 1.5 Pro and 1.5 Flash support a maximum of 3,600 document pages. Document pages must be in one of the following text data MIME types:
+
+PDF - application/pdf
+JavaScript - application/x-javascript, text/javascript
+Python - application/x-python, text/x-python
+TXT - text/plain
+HTML - text/html
+CSS - text/css
+Markdown - text/md
+CSV - text/csv
+XML - text/xml
+RTF - text/rtf
+Each document page is equivalent to 258 tokens.
+
+While there are no specific limits to the number of pixels in a document besides the model's context window, larger pages are scaled down to a maximum resolution of 3072x3072 while preserving their original aspect ratio, while smaller pages are scaled up to 768x768 pixels. There is no cost reduction for pages at lower sizes, other than bandwidth, or performance improvement for pages at higher resolution.
+
+For best results:
+
+Rotate pages to the correct orientation before uploading.
+Avoid blurry pages.
+If using a single page, place the text prompt after the page.
+Upload a document and generate content
+You can use the File API to upload a document of any size. Always use the File API when the total request size (including the files, text prompt, system instructions, etc.) is larger than 20 MB.
+
+Note: The File API lets you store up to 20 GB of files per project, with a per-file maximum size of 2 GB. Files are stored for 48 hours. They can be accessed in that period with your API key, but cannot be downloaded from the API. The File API is available at no cost in all regions where the Gemini API is available.
+Call media.upload to upload a file using the File API. The following code uploads a document file and then uses the file in a call to models.generateContent.
+
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleAIFileManager } from "@google/generative-ai/server";
+
+// Initialize GoogleGenerativeAI with your API_KEY.
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+// Initialize GoogleAIFileManager with your API_KEY.
+const fileManager = new GoogleAIFileManager(process.env.API_KEY);
+
+const model = genAI.getGenerativeModel({
+  // Choose a Gemini model.
+  model: "gemini-1.5-flash",
+});
+
+// Upload the file and specify a display name.
+const uploadResponse = await fileManager.uploadFile("media/gemini.pdf", {
+  mimeType: "application/pdf",
+  displayName: "Gemini 1.5 PDF",
+});
+
+// View the response.
+console.log(
+  `Uploaded file ${uploadResponse.file.displayName} as: ${uploadResponse.file.uri}`,
+);
+
+// Generate content using text and the URI reference for the uploaded file.
+const result = await model.generateContent([
+  {
+    fileData: {
+      mimeType: uploadResponse.file.mimeType,
+      fileUri: uploadResponse.file.uri,
+    },
+  },
+  { text: "Can you summarize this document as a bulleted list?" },
+]);
+
+// Output the generated text to the console
+console.log(result.response.text());
+
+Get metadata for a file
+You can verify the API successfully stored the uploaded file and get its metadata by calling files.get. Only the name (and by extension, the uri) are unique.
+
+
+// Make sure to include these imports:
+// import { GoogleAIFileManager } from "@google/generative-ai/server";
+const fileManager = new GoogleAIFileManager(process.env.API_KEY);
+
+const uploadResponse = await fileManager.uploadFile(
+  `${mediaPath}/jetpack.jpg`,
+  {
+    mimeType: "image/jpeg",
+    displayName: "Jetpack drawing",
+  },
+);
+
+// Get the previously uploaded file's metadata.
+const getResponse = await fileManager.getFile(uploadResponse.file.name);
+
+// View the response.
+console.log(
+  `Retrieved file ${getResponse.displayName} as ${getResponse.uri}`,
+);
+
+Call one or more locally stored files
+Alternatively, you can upload one or more locally stored files.
+
+When the combination of files and system instructions that you intend to send is larger than 20MB in size, use the File API to upload those files, as previously shown. Smaller files can instead be called locally from the Gemini API:
+
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import fs from "fs";
+
+// Access your API key as an environment variable (see "Set up your API key" above)
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
+// Converts local file information to a GoogleGenerativeAI.Part object.
+function fileToGenerativePart(path, mimeType) {
+  return {
+    inlineData: {
+      data: Buffer.from(fs.readFileSync(path)).toString("base64"),
+      mimeType
+    },
+  };
+}
+
+// Turn images to Part objects
+const filePart1 = fileToGenerativePart("gemini.pdf", "application/pdf")
+const filePart2 = fileToGenerativePart("example-1.pdf", "application/pdf")
+const filePart3 = fileToGenerativePart("example-2.pdf", "application/pdf")
+Prompt with multiple documents
+You can provide the Gemini API with any combination of documents and text that fit within the model's context window. This example provides one short text prompt and three documents previously uploaded:
+
+
+async function run() {
+  // Choose a Gemini model.
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  const prompt = "Summarize the differences between the thesis statements for these documents.";
+
+  const imageParts = [
+    filePart1,
+    filePart2,
+    filePart3,
+  ];
+
+  const generatedContent = await model.generateContent([prompt, ...imageParts]);
+  
+  console.log(generatedContent.response.text());
+}
+
+run();
+List files
+You can list all files uploaded using the File API and their URIs using files.list.
+
+
+// Make sure to include these imports:
+// import { GoogleAIFileManager } from "@google/generative-ai/server";
+const fileManager = new GoogleAIFileManager(process.env.API_KEY);
+
+const listFilesResponse = await fileManager.listFiles();
+
+// View the response.
+for (const file of listFilesResponse.files) {
+  console.log(`name: ${file.name} | display name: ${file.displayName}`);
+}
+
+Delete files
+Files uploaded using the File API are automatically deleted after 2 days. You can also manually delete them using files.delete.
+
+
+// Make sure to include these imports:
+// import { GoogleAIFileManager } from "@google/generative-ai/server";
+const fileManager = new GoogleAIFileManager(process.env.API_KEY);
+
+const uploadResult = await fileManager.uploadFile(
+  `${mediaPath}/jetpack.jpg`,
+  {
+    mimeType: "image/jpeg",
+    displayName: "Jetpack drawing",
+  },
+);
+
+// Delete the file.
+await fileManager.deleteFile(uploadResult.file.name);
+
+console.log(`Deleted ${uploadResult.file.displayName}`);
+
+Explore vision capabilities with the Gemini API
+
+Python Node.js Go REST
+
+The Gemini API is able to process images and videos, enabling a multitude of exciting developer use cases. Some of Gemini's vision capabilities include the ability to:
+
+Caption and answer questions about images
+Transcribe and reason over PDFs, including long documents up to 2 million token context window
+Describe, segment, and extract information from videos, including both visual frames and audio, up to 90 minutes long
+Detect objects in an image and return bounding box coordinates for them
+This tutorial demonstrates some possible ways to prompt the Gemini API with images and video input, provides code examples, and outlines prompting best practices with multimodal vision capabilities. All output is text-only.
+
+Before you begin: Set up your project and API key
+Before calling the Gemini API, you need to set up your project and configure your API key.
+
+ Expand to view how to set up your project and API key
+
+Prompting with images
+In this tutorial, you will upload images using the File API or as inline data and generate content based on those images.
+
+Technical details (images)
+Gemini 1.5 Pro and 1.5 Flash support a maximum of 3,600 image files.
+
+Images must be in one of the following image data MIME types:
+
+PNG - image/png
+JPEG - image/jpeg
+WEBP - image/webp
+HEIC - image/heic
+HEIF - image/heif
+Each image is equivalent to 258 tokens.
+
+While there are no specific limits to the number of pixels in an image besides the model's context window, larger images are scaled down to a maximum resolution of 3072x3072 while preserving their original aspect ratio, while smaller images are scaled up to 768x768 pixels. There is no cost reduction for images at lower sizes, other than bandwidth, or performance improvement for images at higher resolution.
+
+For best results:
+
+Rotate images to the correct orientation before uploading.
+Avoid blurry images.
+If using a single image, place the text prompt after the image.
+Image input
+For total image payload size less than 20MB, we recommend either uploading base64 encoded images or directly uploading locally stored image files.
+
+Base64 encoded images
+You can upload public image URLs by encoding them as Base64 payloads. We recommend using the httpx library to fetch the image URLs. The following code example shows how to do this:
+
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// Access your API key as an environment variable (see "Set up your API key" above)
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
+const model = genAI.getGenerativeModel({ model: 'models/gemini-1.5-pro' });
+
+const imageResp = await fetch(
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Palace_of_Westminster_from_the_dome_on_Methodist_Central_Hall.jpg/2560px-Palace_of_Westminster_from_the_dome_on_Methodist_Central_Hall.jpg'
+)
+    .then((response) => response.arrayBuffer());
+
+const result = await model.generateContent([
+    {
+        inlineData: {
+            data: Buffer.from(imageResp).toString("base64"),
+            mimeType: "image/jpeg",
+        },
+    },
+    'Caption this image.',
+]);
+console.log(result.response.text());
+Multiple images
+To prompt with multiple images in Base64 encoded format, you can do the following:
+
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// Access your API key as an environment variable (see "Set up your API key" above)
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
+const model = genAI.getGenerativeModel({ model: 'models/gemini-1.5-pro' });
+
+const imageResp1 = await fetch(IMAGE_PATH_1).then((response) => response.arrayBuffer());
+const imageResp2 = await fetch(IMAGE_PATH_2).then((response) => response.arrayBuffer());
+
+const result = await model.generateContent([
+    {
+        inlineData: {
+            data: Buffer.from(imageResp1).toString("base64"),
+            mimeType: "image/jpeg",
+        },
+    },
+    {
+        inlineData: {
+            data: Buffer.from(imageResp2).toString("base64"),
+            mimeType: "image/jpeg",
+        },
+    },
+    'Generate a list of all the objects contained in both images.',
+]);
+console.log(result.response.text());
+
+Upload an image and generate content
+When the combination of files and system instructions that you intend to send is larger than 20 MB in size, use the File API to upload those files.
+
+Use the media.upload method of the File API to upload an image of any size.
+
+Note: The File API lets you store up to 20 GB of files per project, with a per-file maximum size of 2 GB. Files are stored for 48 hours. They can be accessed in that period with your API key, but cannot be downloaded from the API. It is available at no cost in all regions where the Gemini API is available.
+After uploading the file, you can make GenerateContent requests that reference the File API URI. Select the generative model and provide it with a text prompt and the uploaded image.
+
+
+// Make sure to include these imports:
+// import { GoogleAIFileManager } from "@google/generative-ai/server";
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+const fileManager = new GoogleAIFileManager(process.env.API_KEY);
+
+const uploadResult = await fileManager.uploadFile(
+  `${mediaPath}/jetpack.jpg`,
+  {
+    mimeType: "image/jpeg",
+    displayName: "Jetpack drawing",
+  },
+);
+// View the response.
+console.log(
+  `Uploaded file ${uploadResult.file.displayName} as: ${uploadResult.file.uri}`,
+);
+
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const result = await model.generateContent([
+  "Tell me about this image.",
+  {
+    fileData: {
+      fileUri: uploadResult.file.uri,
+      mimeType: uploadResult.file.mimeType,
+    },
+  },
+]);
+console.log(result.response.text());
+
+Verify image file upload and get metadata
+You can verify the API successfully stored the uploaded file and get its metadata by calling files.get. Only the name (and by extension, the uri) are unique.
+
+
+// Make sure to include these imports:
+// import { GoogleAIFileManager } from "@google/generative-ai/server";
+const fileManager = new GoogleAIFileManager(process.env.API_KEY);
+
+const uploadResponse = await fileManager.uploadFile(
+  `${mediaPath}/jetpack.jpg`,
+  {
+    mimeType: "image/jpeg",
+    displayName: "Jetpack drawing",
+  },
+);
+
+// Get the previously uploaded file's metadata.
+const getResponse = await fileManager.getFile(uploadResponse.file.name);
+
+// View the response.
+console.log(
+  `Retrieved file ${getResponse.displayName} as ${getResponse.uri}`,
+);
+
+Call one or more locally stored image files
+Alternatively, you can upload your own files.
+
+When the combination of files and system instructions that you intend to send is larger than 20MB in size, use the File API to upload those files, as previously shown. Smaller files can instead be called locally from the Gemini API:
+
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import fs from "fs";
+
+// Access your API key as an environment variable (see "Set up your API key" above)
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
+// Converts local file information to a GoogleGenerativeAI.Part object.
+function fileToGenerativePart(path, mimeType) {
+  return {
+    inlineData: {
+      data: Buffer.from(fs.readFileSync(path)).toString("base64"),
+      mimeType
+    },
+  };
+}
+
+// Turn images to Part objects
+const filePart1 = fileToGenerativePart("jetpack.jpg", "image/jpeg")
+const filePart2 = fileToGenerativePart("piranha.jpg", "image/jpeg")
+const filePart3 = fileToGenerativePart("firefighter.jpg", "image/jpeg")
+Note that these inline data calls don't include many of the features available through the File API, such as getting file metadata, listing, or deleting files.
+
+Prompt with multiple images
+You can provide the Gemini API with any combination of images and text that fit within the model's context window. This example provides one short text prompt and the three images previously uploaded.
+
+
+async function run() {
+  // Choose a Gemini model.
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+
+  const prompt = "Write an advertising jingle showing how the product in the first image could solve the problems shown in the second two images.";
+
+  const imageParts = [
+    filePart1,
+    filePart2,
+    filePart3,
+  ];
+
+  const generatedContent = await model.generateContent([prompt, ...imageParts]);
+  
+  console.log(generatedContent.response.text());
+}
+
+run();
+OpenAI Compatibility
+You can access Gemini's image understanding capabilities using the OpenAI libraries. This lets you integrate Gemini into existing OpenAI workflows by updating three lines of code and using your Gemini API key. See the Image understanding example for code demonstrating how to send images encoded as Base64 payloads.
+
+Capabilities
+This section outlines specific vision capabilities of the Gemini model, including object detection and bounding box coordinates.
+
+Get a bounding box for an object
+Gemini models are trained to return bounding box coordinates as relative widths or heights in the range of [0, 1]. These values are then scaled by 1000 and converted to integers. Effectively, the coordinates represent the bounding box on a 1000x1000 pixel version of the image. Therefore, you'll need to convert these coordinates back to the dimensions of your original image to accurately map the bounding boxes.
+
+
+// filePart = ...
+// filePart2 has the piranha.
+
+async function findBox(filePart) {
+  // Choose a Gemini model.
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+
+  const prompt = "Return a bounding box for the piranha. \n [ymin, xmin, ymax, xmax]";
+
+  const generatedContent = await model.generateContent([prompt, filePart]);
+  
+  console.log(generatedContent.response.text());
+}
+
+run(filePart);
+The model returns bounding box coordinates in the format [ymin, xmin, ymax, xmax]. To convert these normalized coordinates to the pixel coordinates of your original image, follow these steps:
+
+Divide each output coordinate by 1000.
+Multiply the x-coordinates by the original image width.
+Multiply the y-coordinates by the original image height.
+Prompting with video
+In this tutorial, you will upload a video using the File API and generate content based on those images.
+
+Note: The File API is required to upload video files, due to their size. However, the File API is only available for Python, Node.js, Go, and REST.
+Technical details (video)
+Gemini 1.5 Pro and Flash support up to approximately an hour of video data.
+
+Video must be in one of the following video format MIME types:
+
+video/mp4
+video/mpeg
+video/mov
+video/avi
+video/x-flv
+video/mpg
+video/webm
+video/wmv
+video/3gpp
+The File API service extracts image frames from videos at 1 frame per second (FPS) and audio at 1Kbps, single channel, adding timestamps every second. These rates are subject to change in the future for improvements in inference.
+
+Note: The details of fast action sequences may be lost at the 1 FPS frame sampling rate. Consider slowing down high-speed clips for improved inference quality.
+Individual frames are 258 tokens, and audio is 32 tokens per second. With metadata, each second of video becomes ~300 tokens, which means a 1M context window can fit slightly less than an hour of video.
+
+To ask questions about time-stamped locations, use the format MM:SS, where the first two digits represent minutes and the last two digits represent seconds.
+
+For best results:
+
+Use one video per prompt.
+If using a single video, place the text prompt after the video.
+Upload a video file using the File API
+Note: The File API lets you store up to 20 GB of files per project, with a per-file maximum size of 2 GB. Files are stored for 48 hours. They can be accessed in that period with your API key, but they cannot be downloaded using any API. It is available at no cost in all regions where the Gemini API is available.
+The File API accepts video file formats directly. This example uses the short NASA film "Jupiter's Great Red Spot Shrinks and Grows". Credit: Goddard Space Flight Center (GSFC)/David Ladd (2018).
+
+"Jupiter's Great Red Spot Shrinks and Grows" is in the public domain and does not show identifiable people. (NASA image and media usage guidelines.)
+
+Start by retrieving the short video:
+
+
+wget https://storage.googleapis.com/generativeai-downloads/images/GreatRedSpot.mp4
+Upload the video using the File API and print the URI.
+
+
+// To use the File API, use this import path for GoogleAIFileManager.
+// Note that this is a different import path than what you use for generating content.
+// For versions lower than @google/generative-ai@0.13.0
+// use "@google/generative-ai/files"
+import { GoogleAIFileManager } from "@google/generative-ai/server";
+
+// Initialize GoogleAIFileManager with your API_KEY.
+const fileManager = new GoogleAIFileManager(process.env.API_KEY);
+
+// Upload the file and specify a display name.
+const uploadResponse = await fileManager.uploadFile("GreatRedSpot.mp4", {
+  mimeType: "video/mp4",
+  displayName: "Jupiter's Great Red Spot",
+});
+
+// View the response.
+console.log(`Uploaded file ${uploadResponse.file.displayName} as: ${uploadResponse.file.uri}`);
+Verify file upload and check state
+Verify the API has successfully received the files by calling the files.get method.
+
+Note: Video files have a State field in the File API. When a video is uploaded, it will be in the PROCESSING state until it is ready for inference. Only ACTIVE files can be used for model inference.
+
+// To use the File API, use this import path for GoogleAIFileManager.
+// Note that this is a different import path than what you use for generating content.
+// For versions lower than @google/generative-ai@0.13.0
+// use "@google/generative-ai/files"
+import { GoogleAIFileManager, FileState } from "@google/generative-ai/server";
+
+// Initialize GoogleAIFileManager with your API_KEY.
+const fileManager = new GoogleAIFileManager(process.env.API_KEY);
+
+// Upload the video file using the File API
+// uploadResponse = ...
+const name = uploadResponse.file.name;
+
+// Poll getFile() on a set interval (10 seconds here) to check file state.
+let file = await fileManager.getFile(name);
+while (file.state === FileState.PROCESSING) {
+  process.stdout.write(".")
+  // Sleep for 10 seconds
+  await new Promise((resolve) => setTimeout(resolve, 10_000));
+  // Fetch the file from the API again
+  file = await fileManager.getFile(name)
+}
+
+if (file.state === FileState.FAILED) {
+  throw new Error("Video processing failed.");
+}
+
+// When file.state is ACTIVE, the file is ready to be used for inference.
+console.log(`File ${file.displayName} is ready for inference as ${file.uri}`);
+
+Prompt with a video and text
+Once the uploaded video is in the ACTIVE state, you can make GenerateContent requests that specify the File API URI for that video. Select the generative model and provide it with the uploaded video and a text prompt.
+
+
+// To generate content, use this import path for GoogleGenerativeAI.
+// Note that this is a different import path than what you use for the File API.
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// Initialize GoogleGenerativeAI with your API_KEY.
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
+// Choose a Gemini model.
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-pro",
+});
+
+// Upload the video file using the File API
+// uploadResponse = ...
+
+// Generate content using text and the URI reference for the uploaded file.
+const result = await model.generateContent([
+    {
+      fileData: {
+        mimeType: uploadResponse.file.mimeType,
+        fileUri: uploadResponse.file.uri
+      }
+    },
+    { text: "Summarize this video. Then create a quiz with answer key based on the information in the video." },
+  ]);
+
+// Handle the response of generated text
+console.log(result.response.text())
+
+Refer to timestamps in the content
+You can use timestamps of the form MM:SS to refer to specific moments in the video.
+
+
+// To generate content, use this import path for GoogleGenerativeAI.
+// Note that this is a different import path than what you use for the File API.
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// Initialize GoogleGenerativeAI with your API_KEY.
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
+// Choose a Gemini model.
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-pro",
+});
+
+// Upload the video file using the File API
+// uploadResponse = ...
+
+// Generate content using text and the URI reference for the uploaded file.
+const result = await model.generateContent([
+    {
+      fileData: {
+        mimeType: uploadResponse.file.mimeType,
+        fileUri: uploadResponse.file.uri
+      }
+    },
+    { text: "What are the examples given at 01:05 and 01:19 supposed to show us?" },
+  ]);
+
+// Handle the response of generated text
+console.log(result.response.text())
+
+Transcribe video and provide visual descriptions
+If the video is not fast-paced (only 1 frame per second of video is sampled), it's possible to transcribe the video with visual descriptions for each shot.
+
+
+// To generate content, use this import path for GoogleGenerativeAI.
+// Note that this is a different import path than what you use for the File API.
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// Initialize GoogleGenerativeAI with your API_KEY.
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
+// Choose a Gemini model.
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-pro",
+});
+
+// Upload the video file using the File API
+// uploadResponse = ...
+
+// Generate content using text and the URI reference for the uploaded file.
+const result = await model.generateContent([
+    {
+      fileData: {
+        mimeType: uploadResponse.file.mimeType,
+        fileUri: uploadResponse.file.uri
+      }
+    },
+    { text: "Transcribe the audio, giving timestamps. Also provide visual descriptions." },
+  ]);
+
+// Handle the response of generated text
+console.log(result.response.text())
+
+List files
+You can list all files uploaded using the File API and their URIs using files.list.
+
+
+// Make sure to include these imports:
+// import { GoogleAIFileManager } from "@google/generative-ai/server";
+const fileManager = new GoogleAIFileManager(process.env.API_KEY);
+
+const listFilesResponse = await fileManager.listFiles();
+
+// View the response.
+for (const file of listFilesResponse.files) {
+  console.log(`name: ${file.name} | display name: ${file.displayName}`);
+}
+
+Delete files
+Files uploaded using the File API are automatically deleted after 2 days. You can also manually delete them using files.delete.
+
+
+// Make sure to include these imports:
+// import { GoogleAIFileManager } from "@google/generative-ai/server";
+const fileManager = new GoogleAIFileManager(process.env.API_KEY);
+
+const uploadResult = await fileManager.uploadFile(
+  `${mediaPath}/jetpack.jpg`,
+  {
+    mimeType: "image/jpeg",
+    displayName: "Jetpack drawing",
+  },
+);
+
+// Delete the file.
+await fileManager.deleteFile(uploadResult.file.name);
+
+console.log(`Deleted ${uploadResult.file.displayName}`);
 ```
 
-I want to have the response by faded in, chunk by chunk. I want the script to inteligently manage the input stream to have it appear flawlessly. This should be done by having whatever appears fade in from left to right too. Don't wait for one cunk to be fully loaded before animating the next one if it is already ready.
 I want you to fully develop and implement this.

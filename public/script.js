@@ -161,6 +161,8 @@ async function handleSubmit() {
         // Add assistant message placeholder
         const assistantMessageEl = addMessageToChat('assistant', '');
 
+        console.log(messageParts);
+
         // Start processing the message parts
         await processMessageParts(messageParts, assistantMessageEl);
     } catch (error) {
