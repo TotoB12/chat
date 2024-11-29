@@ -1,6 +1,19 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "https://esm.run/@google/generative-ai";
 import { marked } from "https://esm.run/marked";
 import { functions, tools } from './tools.js';
+import markedKatex from "https://esm.run/marked-katex-extension";
+import createDOMPurify from "https://esm.run/dompurify";
+
+// KaTeX options
+const katexOptions = {
+    throwOnError: false,
+};
+
+// Use the KaTeX extension with marked
+marked.use(markedKatex(katexOptions));
+
+// Create a DOMPurify instance
+const DOMPurify = createDOMPurify(window);
 
 const API_KEY_STORAGE_KEY = 'gemini-api-key';
 let model;
@@ -167,7 +180,7 @@ async function handleSubmit() {
 
         // Recreate chat with updated history
         chat = model.startChat({ history: chatHistoryData });
-        
+
         // Add user message to chat history
         chatHistoryData.push({
             role: 'user',
@@ -191,7 +204,7 @@ async function processMessageParts(messageParts, assistantMessageEl) {
     let fullResponse = '';
     let response;
 
-    // Always ensure messageParts is not empty
+    // Ensure messageParts is not empty
     if (messageParts.length === 0) {
         console.error('No message parts provided.');
         return;
@@ -220,8 +233,14 @@ async function processMessageParts(messageParts, assistantMessageEl) {
             fullResponse += chunkText;
             assistantParts.push({ text: chunkText });
         }
-        console.log(chunkText);
-        assistantMessageEl.innerHTML = marked.parse(fullResponse);
+
+        // Use marked and DOMPurify to render the assistant's response
+        const parsedContent = marked.parse(fullResponse);
+        const sanitizedContent = DOMPurify.sanitize(parsedContent, {
+            ADD_TAGS: ['math', 'mrow', 'mi', 'mo', 'mn', 'msqrt', 'mfrac', 'msup', 'msub'],
+            ADD_ATTR: ['class', 'style', 'aria-hidden', 'focusable', 'role', 'tabindex', 'viewBox', 'xmlns', 'd'],
+        });
+        assistantMessageEl.innerHTML = sanitizedContent;
         scrollToBottom();
     }
 
@@ -447,7 +466,15 @@ function addMessageToChat(role, content, attachments = []) {
 
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
-    contentDiv.innerHTML = role === 'error' ? content : marked.parse(content);
+
+    // Parse the content with marked and sanitize with DOMPurify
+    const parsedContent = marked.parse(content);
+    const sanitizedContent = DOMPurify.sanitize(parsedContent, {
+        ADD_TAGS: ['math', 'mrow', 'mi', 'mo', 'mn', 'msqrt', 'mfrac', 'msup', 'msub'],
+        ADD_ATTR: ['class', 'style', 'aria-hidden', 'focusable', 'role', 'tabindex', 'viewBox', 'xmlns', 'd'],
+    });
+
+    contentDiv.innerHTML = sanitizedContent;
 
     messageDiv.appendChild(contentDiv);
     chatHistory.appendChild(messageDiv);
