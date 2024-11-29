@@ -237,6 +237,8 @@ async function processMessageParts(messageParts, assistantMessageEl) {
             });
         }
 
+        console.log(`parts`, assistantParts);
+
         // Recursively process the function responses
         await processMessageParts(functionResponses, assistantMessageEl);
     }
