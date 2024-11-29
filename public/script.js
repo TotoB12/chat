@@ -30,7 +30,6 @@ const apiKeyModal = document.getElementById('api-key-modal');
 const apiKeyInput = document.getElementById('api-key-input');
 const saveApiKeyBtn = document.getElementById('save-api-key');
 const clearKeyBtn = document.getElementById('clear-key');
-const newChatBtn = document.getElementById('new-chat');
 const chatForm = document.getElementById('chat-form');
 const messageInput = document.getElementById('message-input');
 const chatHistory = document.getElementById('chat-history');
@@ -115,13 +114,6 @@ clearKeyBtn.addEventListener('click', () => {
     chatHistoryData = [];
     chatHistory.innerHTML = '';
     apiKeyModal.style.display = 'flex';
-});
-
-newChatBtn.addEventListener('click', () => {
-    chat = null;
-    chatHistoryData = [];
-    chatHistory.innerHTML = '';
-    initializeChat();
 });
 
 // Handle file upload button click
