@@ -4,7 +4,7 @@ async function getDateAndTime() {
 }
 
 async function getWeather(location) {
-    const apiKey = 'YOUR_OPENWEATHERMAP_API_KEY';
+    const apiKey = '9f341ed3065ff2549bede5ef5da25902';
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&appid=${apiKey}&units=metric`;
     try {
         const response = await fetch(url);
