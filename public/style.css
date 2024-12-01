@@ -261,9 +261,22 @@ html {
     display: flex;
     width: 100%;
     flex-direction: column;
-    background-color: var(--bg-tertiary);
     border-radius: 1.2rem;
     padding: 0 0.5rem;
+}
+
+.message-input {
+    padding: 0.5rem;
+    min-height: 1.5rem;
+    outline: none;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.message-input[contenteditable="true"]:empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-secondary);
+    pointer-events: none;
 }
 
 #message-input::placeholder {
@@ -278,6 +291,7 @@ html {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex: 1;
 }
 
 #file-input {

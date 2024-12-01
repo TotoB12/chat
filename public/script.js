@@ -4,15 +4,12 @@ import { functions, tools } from './tools.js';
 import markedKatex from "https://esm.run/marked-katex-extension";
 import createDOMPurify from "https://esm.run/dompurify";
 
-// KaTeX options
 const katexOptions = {
     throwOnError: false,
 };
 
-// Use the KaTeX extension with marked
 marked.use(markedKatex(katexOptions));
 
-// Create a DOMPurify instance
 const DOMPurify = createDOMPurify(window);
 
 const API_KEY_STORAGE_KEY = 'gemini-api-key';
@@ -23,7 +20,7 @@ let dragCounter = 0;
 let currentFileIndex = 0;
 let currentFiles = [];
 
-let chatHistoryData = []; // To keep track of the chat history for the model
+let chatHistoryData = [];
 
 // DOM Elements
 const apiKeyModal = document.getElementById('api-key-modal');
@@ -116,20 +113,17 @@ clearKeyBtn.addEventListener('click', () => {
     apiKeyModal.style.display = 'flex';
 });
 
-// Handle file upload button click
 uploadButton.addEventListener('click', (e) => {
     e.preventDefault();
     fileInput.click();
 });
 
-// Handle file selection
 fileInput.addEventListener('change', (e) => {
     e.preventDefault();
     handleFiles(e.target.files);
 });
 
-// Handle message submission
-messageInput.addEventListener('keypress', (e) => {
+messageInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         handleSubmit();
@@ -149,40 +143,32 @@ async function handleSubmit() {
 
     if (!model) await initializeChat();
 
-    const message = messageInput.value.trim();
+    const message = messageInput.innerText.trim();
     if (!message && attachedFiles.length === 0) return;
 
-    const currentAttachedFiles = attachedFiles.slice(); // Copy the array
+    const currentAttachedFiles = attachedFiles.slice();
 
     try {
-        // Add user message to chat with attachments
         addMessageToChat('user', message, currentAttachedFiles);
-        messageInput.value = '';
+        messageInput.innerText = '';
 
-        // Clear attachment previews from toolbar
         attachmentPreviewsContainer.innerHTML = '';
 
-        // Process attached files
         const fileParts = await processAttachedFiles(currentAttachedFiles);
 
-        // Prepare message parts
         const messageParts = [];
         if (message) messageParts.push({ text: message });
         messageParts.push(...fileParts);
 
-        // Recreate chat with updated history
         chat = model.startChat({ history: chatHistoryData });
 
-        // Add user message to chat history
         chatHistoryData.push({
             role: 'user',
             parts: messageParts,
         });
 
-        // Add assistant message placeholder
         const assistantMessageEl = addMessageToChat('assistant', '');
 
-        // Start processing the message parts
         await processMessageParts(messageParts, assistantMessageEl);
     } catch (error) {
         console.error(error);
@@ -196,7 +182,6 @@ async function processMessageParts(messageParts, assistantMessageEl) {
     let fullResponse = '';
     let response;
 
-    // Ensure messageParts is not empty
     if (messageParts.length === 0) {
         console.error('No message parts provided.');
         return;
