@@ -416,7 +416,6 @@ button {
     .toolbar {
         width: 100%;
         flex-direction: column;
-        gap: 0.5rem;
         padding: 0.5rem;
     }
 
@@ -446,7 +445,7 @@ button {
     padding: 0.5rem;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    /* gap: 0.5rem; */
     box-shadow: rgba(255, 255, 255, 0.12) 0px 0px 0px 1px inset;
 }
 
