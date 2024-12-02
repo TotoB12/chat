@@ -21,6 +21,19 @@ async function generateImage(query) {
     return { generatedImageUrl: imageUrl };
 }
 
+async function queryWolframAlpha(query) {
+    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=PVJVP5-HJ84593376&units=metric&input=${encodeURIComponent(query)}`;
+    console.log(url);
+    try {
+        const response = await fetch(url);
+        const data = await response.text();
+        return { response: data };
+    } catch (error) {
+        console.error('Error querying Wolfram Alpha:', error);
+        return { error: error };
+    }
+}
+
 export const functions = {
     getDateAndTime: () => {
         return getDateAndTime()
@@ -30,6 +43,9 @@ export const functions = {
     },
     generateImage: ({ query }) => {
         return generateImage(query);
+    },
+    queryWolframAlpha: ({ query }) => {
+        return queryWolframAlpha(query);
     },
 };
 
@@ -61,6 +77,20 @@ export const tools = [
                 query: {
                     type: "STRING",
                     description: "The text to generate the image with",
+                },
+            },
+            required: ["query"],
+        },
+    },
+    {
+        name: "queryWolframAlpha",
+        parameters: {
+            type: "OBJECT",
+            description: "Query Wolfram Alpha for information, math, statistics. To be used over the internet",
+            properties: {
+                query: {
+                    type: "STRING",
+                    description: "The query to send to Wolfram Alpha",
                 },
             },
             required: ["query"],

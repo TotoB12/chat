@@ -1,5 +1,34 @@
 I am working on a simple and quick AI chat web app. Here is the full project:
 
+dump\server.js
+```javascript
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+
+const app = express();
+const PORT = 8000;
+
+app.use(express.static('public'));
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+app.get('/style.css', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'style.css'));
+});
+app.get('/script.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'script.js'));
+});
+app.get('/temp.png', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'temp.png'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Server listening on http://localhost:${PORT}`);
+});
+
+```
+
 public\index.html
 ```html
 <!DOCTYPE html>
@@ -50,7 +79,7 @@ public\index.html
             <div class="input-group" id="chat-form">
                 <div class="attachment-previews"></div>
                 <div class="message-input-container">
-                    <input type="text" id="message-input" placeholder="Message TotoB12" autocomplete="off">
+                    <div id="message-input" class="message-input" contenteditable="true" data-placeholder="Message TotoB12"></div>
                 </div>
             </div>
         </div>
@@ -111,15 +140,12 @@ import { functions, tools } from './tools.js';
 import markedKatex from "https://esm.run/marked-katex-extension";
 import createDOMPurify from "https://esm.run/dompurify";
 
-// KaTeX options
 const katexOptions = {
     throwOnError: false,
 };
 
-// Use the KaTeX extension with marked
 marked.use(markedKatex(katexOptions));
 
-// Create a DOMPurify instance
 const DOMPurify = createDOMPurify(window);
 
 const API_KEY_STORAGE_KEY = 'gemini-api-key';
@@ -130,7 +156,7 @@ let dragCounter = 0;
 let currentFileIndex = 0;
 let currentFiles = [];
 
-let chatHistoryData = []; // To keep track of the chat history for the model
+let chatHistoryData = [];
 
 // DOM Elements
 const apiKeyModal = document.getElementById('api-key-modal');
@@ -223,20 +249,17 @@ clearKeyBtn.addEventListener('click', () => {
     apiKeyModal.style.display = 'flex';
 });
 
-// Handle file upload button click
 uploadButton.addEventListener('click', (e) => {
     e.preventDefault();
     fileInput.click();
 });
 
-// Handle file selection
 fileInput.addEventListener('change', (e) => {
     e.preventDefault();
     handleFiles(e.target.files);
 });
 
-// Handle message submission
-messageInput.addEventListener('keypress', (e) => {
+messageInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         handleSubmit();
@@ -256,40 +279,32 @@ async function handleSubmit() {
 
     if (!model) await initializeChat();
 
-    const message = messageInput.value.trim();
+    const message = messageInput.innerText.trim();
     if (!message && attachedFiles.length === 0) return;
 
-    const currentAttachedFiles = attachedFiles.slice(); // Copy the array
+    const currentAttachedFiles = attachedFiles.slice();
 
     try {
-        // Add user message to chat with attachments
         addMessageToChat('user', message, currentAttachedFiles);
-        messageInput.value = '';
+        messageInput.innerText = '';
 
-        // Clear attachment previews from toolbar
         attachmentPreviewsContainer.innerHTML = '';
 
-        // Process attached files
         const fileParts = await processAttachedFiles(currentAttachedFiles);
 
-        // Prepare message parts
         const messageParts = [];
         if (message) messageParts.push({ text: message });
         messageParts.push(...fileParts);
 
-        // Recreate chat with updated history
         chat = model.startChat({ history: chatHistoryData });
 
-        // Add user message to chat history
         chatHistoryData.push({
             role: 'user',
             parts: messageParts,
         });
 
-        // Add assistant message placeholder
         const assistantMessageEl = addMessageToChat('assistant', '');
 
-        // Start processing the message parts
         await processMessageParts(messageParts, assistantMessageEl);
     } catch (error) {
         console.error(error);
@@ -303,7 +318,6 @@ async function processMessageParts(messageParts, assistantMessageEl) {
     let fullResponse = '';
     let response;
 
-    // Ensure messageParts is not empty
     if (messageParts.length === 0) {
         console.error('No message parts provided.');
         return;
@@ -978,9 +992,22 @@ html {
     display: flex;
     width: 100%;
     flex-direction: column;
-    background-color: var(--bg-tertiary);
     border-radius: 1.2rem;
     padding: 0 0.5rem;
+}
+
+.message-input {
+    padding: 0.5rem;
+    min-height: 1.5rem;
+    outline: none;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.message-input[contenteditable="true"]:empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-secondary);
+    pointer-events: none;
 }
 
 #message-input::placeholder {
@@ -995,6 +1022,7 @@ html {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex: 1;
 }
 
 #file-input {
@@ -1119,7 +1147,6 @@ button {
     .toolbar {
         width: 100%;
         flex-direction: column;
-        gap: 0.5rem;
         padding: 0.5rem;
     }
 
@@ -1149,7 +1176,7 @@ button {
     padding: 0.5rem;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    /* gap: 0.5rem; */
     box-shadow: rgba(255, 255, 255, 0.12) 0px 0px 0px 1px inset;
 }
 
@@ -1318,6 +1345,19 @@ async function generateImage(query) {
     return { generatedImageUrl: imageUrl };
 }
 
+async function queryWolframAlpha(query) {
+    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=PVJVP5-HJ84593376&units=metric&input=${encodeURIComponent(query)}`;
+    console.log(url);
+    try {
+        const response = await fetch(url);
+        const data = await response.text();
+        return { response: data };
+    } catch (error) {
+        console.error('Error querying Wolfram Alpha:', error);
+        return { error: error };
+    }
+}
+
 export const functions = {
     getDateAndTime: () => {
         return getDateAndTime()
@@ -1327,6 +1367,9 @@ export const functions = {
     },
     generateImage: ({ query }) => {
         return generateImage(query);
+    },
+    queryWolframAlpha: ({ query }) => {
+        return queryWolframAlpha(query);
     },
 };
 
@@ -1363,7 +1406,21 @@ export const tools = [
             required: ["query"],
         },
     },
+    {
+        name: "queryWolframAlpha",
+        parameters: {
+            type: "OBJECT",
+            description: "Query Wolfram Alpha for information, math, statistics. To be used over the internet",
+            properties: {
+                query: {
+                    type: "STRING",
+                    description: "The query to send to Wolfram Alpha",
+                },
+            },
+            required: ["query"],
+        },
+    },
 ];
 ```
 
-This all works well, but I need to make a few design changes. The current message input container is improperly implemented and ugly. I need the input section to not use a different color background than the rest of the tool bar. I need the message input to be replaced with a `div` with editable content as a text editor. I want you to fully develop and implement this.
+This all works well, but I want to introduce a new feature. Any time the AI uses a tool, I want the app to display a usage message. For example, for the `generateImage` tool, I want the web app to show "Generating image..." during the run on the function, and for that to turn into "Generated image" when the function is done running (this message should stay displayed). I want each tool to have a "running" message and a "done" message. These procceses messages should have the same size and position as an AI response, but should be gray. I want you to fully develop and implement this.
