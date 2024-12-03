@@ -22,7 +22,7 @@ async function generateImage(query) {
 }
 
 async function queryWolframAlpha(query) {
-    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=PVJVP5-HJ84593376&units=metric&input=${encodeURIComponent(query)}`;
+    const url = `https://api.totob12.com/wolframalpha?query=${encodeURIComponent(query)}`;
     console.log(url);
     try {
         const response = await fetch(url);
