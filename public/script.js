@@ -22,6 +22,27 @@ let currentFiles = [];
 
 let chatHistoryData = [];
 
+const toolTexts = {
+    getDateAndTime: {
+        processing: "Retrieving current date and time...",
+        done: "Retrieved current date and time."
+    },
+    getWeather: {
+        processing: "Retrieving weather data...",
+        done: "Retrieved weather data."
+    },
+    generateImage: {
+        processing: "Generating image...",
+        done: "Generated image."
+    },
+    queryWolframAlpha: {
+        processing: "Querying Wolfram Alpha...",
+        done: "Queried Wolfram Alpha."
+    }
+};
+
+let currentDoneTexts = [];
+
 // DOM Elements
 const apiKeyModal = document.getElementById('api-key-modal');
 const apiKeyInput = document.getElementById('api-key-input');
@@ -169,6 +190,8 @@ async function handleSubmit() {
 
         const assistantMessageEl = addMessageToChat('assistant', '');
 
+        currentDoneTexts = [];
+
         await processMessageParts(messageParts, assistantMessageEl);
     } catch (error) {
         console.error(error);
@@ -211,7 +234,6 @@ async function processMessageParts(messageParts, assistantMessageEl) {
             assistantParts.push({ text: chunkText });
         }
 
-        // Use marked and DOMPurify to render the assistant's response
         const parsedContent = marked.parse(fullResponse);
         const sanitizedContent = DOMPurify.sanitize(parsedContent, {
             ADD_TAGS: ['math', 'mrow', 'mi', 'mo', 'mn', 'msqrt', 'mfrac', 'msup', 'msub'],
@@ -221,16 +243,14 @@ async function processMessageParts(messageParts, assistantMessageEl) {
         scrollToBottom();
     }
 
-    // Add assistant's turn to chat history
     chatHistoryData.push({
         role: 'model',
         parts: assistantParts,
     });
 
     if (toolCalls.length > 0) {
-        const toolResults = await useTools(toolCalls);
+        const toolResults = await useTools(toolCalls, assistantMessageEl);
 
-        // Prepare function responses
         const functionResponses = toolResults.map(toolResult => ({
             function_response: {
                 name: toolResult.functionResponse.name,
@@ -238,17 +258,41 @@ async function processMessageParts(messageParts, assistantMessageEl) {
             }
         }));
 
-        // Recursively process function responses
         await processMessageParts(functionResponses, assistantMessageEl);
+    } else {
+        if (currentDoneTexts.length > 0) {
+            const doneContainer = document.createElement('div');
+            doneContainer.className = 'done-container';
+
+            doneContainer.innerHTML = currentDoneTexts.map(text => `<div>${DOMPurify.sanitize(text)}</div>`).join('');
+            assistantMessageEl.appendChild(doneContainer);
+            scrollToBottom();
+        }
     }
 }
 
-async function useTools(toolCalls) {
+async function useTools(toolCalls, assistantMessageEl) {
     const toolResults = [];
     for (const tool of toolCalls) {
         console.log("Tool name: " + tool.name);
         console.log("Tool args: " + JSON.stringify(tool.args));
+
+        const processingText = toolTexts[tool.name]?.processing || "Processing...";
+        const processingEl = document.createElement('div');
+        processingEl.className = 'processing-text';
+        processingEl.innerText = processingText;
+        assistantMessageEl.appendChild(processingEl);
+        scrollToBottom();
+
         const output = await functions[tool.name](tool.args);
+
+        if (processingEl && processingEl.parentNode) {
+            processingEl.parentNode.removeChild(processingEl);
+        }
+
+        const doneText = toolTexts[tool.name]?.done || "Done processing.";
+        currentDoneTexts.push(doneText);
+
         toolResults.push({
             functionResponse: {
                 name: tool.name,
@@ -444,7 +488,6 @@ function addMessageToChat(role, content, attachments = []) {
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
 
-    // Parse the content with marked and sanitize with DOMPurify
     const parsedContent = marked.parse(content);
     const sanitizedContent = DOMPurify.sanitize(parsedContent, {
         ADD_TAGS: ['math', 'mrow', 'mi', 'mo', 'mn', 'msqrt', 'mfrac', 'msup', 'msub'],

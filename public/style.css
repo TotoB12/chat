@@ -179,6 +179,41 @@ html {
     word-wrap: break-word;
 }
 
+.processing-text {
+    background: linear-gradient(270deg, #FFFFFF, #BBBBBB, #DDDDDD);
+    background-size: 200% 100%;
+    
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+
+    animation: gradientMoves 800ms linear infinite;
+}
+
+@-webkit-keyframes gradientMoves {
+    0% { background-position: 200% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@-moz-keyframes gradientMoves {
+    0% { background-position: 200% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes gradientMoves { 
+    0% { background-position: 200% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.done-container {
+    color: grey;
+    margin-top: 0.5rem;
+}
+
 .message-attachments {
     display: flex;
     flex-wrap: wrap;
