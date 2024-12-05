@@ -17,8 +17,15 @@ async function getWeather(location) {
 }
 
 async function generateImage(query) {
-    const imageUrl = `https://fast-flux-demo.replicate.workers.dev/api/generate-image?text=${encodeURIComponent(query)}`;
-    return { generatedImageUrl: imageUrl };
+    const url = `https://api.totob12.com/generate-image?prompt=${encodeURIComponent(query)}`;
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return { image: data.result[0].url };
+    } catch (error) {
+        console.error(error);
+        return { error: error.message };
+    }
 }
 
 async function queryWolframAlpha(query) {
