@@ -21,7 +21,7 @@ async function generateImage(query) {
     try {
         const response = await fetch(url);
         const data = await response.json();
-        return { image: data.result[0].url };
+        return { image: data.result };
     } catch (error) {
         console.error(error);
         return { error: error.message };

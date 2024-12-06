@@ -27,9 +27,16 @@ body {
     flex-direction: column;
 }
 
-html {
+/* html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+} */
+
+/* html {
     overflow: scroll;
-}
+} */
 
 ::-webkit-scrollbar {
     width: 0px;
@@ -470,7 +477,7 @@ button {
 
 .toolbar {
     position: fixed;
-    bottom: 0;
+    bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
     border-radius: 28px;
@@ -480,7 +487,6 @@ button {
     padding: 0.5rem;
     display: flex;
     flex-direction: column;
-    /* gap: 0.5rem; */
     box-shadow: rgba(255, 255, 255, 0.12) 0px 0px 0px 1px inset;
 }
 
