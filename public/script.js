@@ -151,10 +151,60 @@ messageInput.addEventListener('keydown', (e) => {
     }
 });
 
+messageInput.addEventListener('paste', handlePasteEvent);
+
 chatForm.addEventListener('submit', (e) => {
     e.preventDefault();
     handleSubmit();
 });
+
+function handlePasteEvent(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const clipboardItems = e.clipboardData.items;
+    let foundFiles = false;
+    let foundText = false;
+    let pastedText = '';
+
+    for (const item of clipboardItems) {
+        if (item.kind === 'file') {
+            const file = item.getAsFile();
+            if (file && (
+                file.type.startsWith('image/') ||
+                file.type.startsWith('video/') ||
+                file.type.startsWith('audio/') ||
+                file.type.startsWith('text/') ||
+                file.type.startsWith('application/pdf')
+            )) {
+                foundFiles = true;
+                attachedFiles.push(file);
+                displayAttachmentPreview(file);
+            }
+        } else if (item.kind === 'string' && item.type === 'text/plain') {
+            foundText = true;
+            item.getAsString((text) => {
+                pastedText += text;
+                setTimeout(() => {
+                    if (pastedText && !foundFiles) {
+                        insertPlainTextAtCursor(messageInput, pastedText);
+                    }
+                }, 0);
+            });
+        }
+    }
+
+    if (!foundText && !foundFiles) {
+        const text = e.clipboardData.getData('text/plain');
+        if (text) {
+            insertPlainTextAtCursor(messageInput, text);
+        }
+    }
+}
+
+function insertPlainTextAtCursor(element, text) {
+    document.execCommand('insertText', false, text);
+}
 
 async function handleSubmit() {
     if (!localStorage.getItem(API_KEY_STORAGE_KEY)) {
