@@ -108,7 +108,7 @@ You have access to a large array of tools to help you access information or crea
     model = genAI.getGenerativeModel({
         model: "gemini-1.5-flash",
         generationConfig: {
-            temperature: 0.2,
+            temperature: 0.4,
         },
         tools: { functionDeclarations: tools },
         safetySettings: safetySettings,

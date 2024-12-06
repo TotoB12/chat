@@ -215,7 +215,7 @@ You have access to a large array of tools to help you access information or crea
     model = genAI.getGenerativeModel({
         model: "gemini-1.5-flash",
         generationConfig: {
-            temperature: 0.2,
+            temperature: 0.4,
         },
         tools: { functionDeclarations: tools },
         safetySettings: safetySettings,
@@ -925,30 +925,33 @@ html {
 }
 
 .processing-text {
-    margin-bottom: 1px;
-    background: linear-gradient(270deg, #f1f1f1, #e1e1e1, #f1f1f1);
+    background: linear-gradient(270deg, #FFFFFF, #BBBBBB, #DDDDDD);
     background-size: 200% 100%;
-    border-radius: 4px;
-  
-    -webkit-animation: gradientMoves 800ms linear infinite;
-    -moz-animation: gradientMoves 800ms linear infinite;
+    
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+
     animation: gradientMoves 800ms linear infinite;
 }
 
 @-webkit-keyframes gradientMoves {
-    0%{background-position:0% 50%}
-    50%{background-position:100% 50%}
-    100%{background-position:200% 50%}
+    0% { background-position: 200% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
+
 @-moz-keyframes gradientMoves {
-    0%{background-position:0% 50%}
-    50%{background-position:100% 50%}
-    100%{background-position:200% 50%}
+    0% { background-position: 200% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
+
 @keyframes gradientMoves { 
-    0%{background-position:0% 50%}
-    50%{background-position:100% 50%}
-    100%{background-position:200% 50%}
+    0% { background-position: 200% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .done-container {
@@ -1474,55 +1477,5 @@ export const tools = [
 ];
 ```
 
-This all works well, but I am trying to intoduce a new feature. I want the processing text to have a smooth loading animation, a kind of loading skeleton vide. Here is what I copied from online:
-
-```html
-skeleton-text<div class="card">
-  <div class="skeleton-text" style='width:100px;'></div>
-  <div class="skeleton-text" style='width:120px;'></div>
-  <div class="skeleton-text" style='width:80px;'></div>
-  <div class="skeleton-text" style='width:120px;'></div>
-  <div class="skeleton-text" style='width:110px;'></div>
-</div>
-```
-
-```css
-.card {
-   width: 600px;
-  height: 400px;
-  border: 1px solid #333;
-  padding: 40px;
-}
-.skeleton-text {
-  width: 100px;
-  height: 20px;
-  background: #eee;
-  margin-bottom: 1px;
-  background: linear-gradient(270deg, #f1f1f1, #e1e1e1, #f1f1f1);
-  background-size: 200% 100%;
-  border-radius: 4px;
-
-  -webkit-animation: gradientMoves 800ms linear infinite;
-  -moz-animation: gradientMoves 800ms linear infinite;
-  animation: gradientMoves 800ms linear infinite;
-
-}
-
-@-webkit-keyframes gradientMoves {
-    0%{background-position:0% 50%}
-    50%{background-position:100% 50%}
-    100%{background-position:200% 50%}
-}
-@-moz-keyframes gradientMoves {
-    0%{background-position:0% 50%}
-    50%{background-position:100% 50%}
-    100%{background-position:200% 50%}
-}
-@keyframes gradientMoves { 
-    0%{background-position:0% 50%}
-    50%{background-position:100% 50%}
-    100%{background-position:200% 50%}
-}
-```
-
-But I don't want it to be the background of the text: I want the text itself to have that color and animation. I want you to fully develop and implement this.
+This all works, but I want to make some changes to the input area. As it is right now, the setup is very weird when pasting content in, as it will display any HTML or image. I need it to only display raw text. Also, I want to add the feature where users can paste images and videos into the input area. When these are pasted in, I want the UI and script to treat them just like regular file uploads.
+I want you to fully develop and implement this.
