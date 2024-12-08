@@ -62,8 +62,8 @@ async function searchImages(query) {
     try {
         const response = await fetch(url);
         let data = await response.json();
-        data.images = data.images.slice(0, 10);
-        return data;
+        data.images = data.images.slice(0, 7);
+        return { images_to_display: data };
     } catch (error) {
         console.error(error);
         return { error: error.message };

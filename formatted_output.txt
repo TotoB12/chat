@@ -1645,3 +1645,4 @@ export const tools = [
 ];
 ```
 
+This all works well, but I want to make a change. When the AI displays an image, it is currently being rendered in full size, as `img` elements. I want these images to be limited in size (like the user images), amd to be clickable (open in full view). I want you to fully develop and implement this.

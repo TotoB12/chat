@@ -186,6 +186,15 @@ body {
     word-wrap: break-word;
 }
 
+.assistant-message img {
+    max-width: 200px;
+    max-height: 200px;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    border-radius: 0.7rem;
+    background-color: var(--bg-secondary);
+}
+
 .processing-text {
     background: linear-gradient(270deg, #FFFFFF, #BBBBBB, #DDDDDD);
     background-size: 200% 100%;
