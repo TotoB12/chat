@@ -17,6 +17,7 @@ async function getWeather(location) {
 }
 
 async function generateImage(query) {
+    query = btoa(query);
     const url = `https://api.totob12.com/generate-image?prompt=${encodeURIComponent(query)}`;
     try {
         const response = await fetch(url);
@@ -29,6 +30,7 @@ async function generateImage(query) {
 }
 
 async function queryWolframAlpha(query) {
+    query = btoa(query);
     const url = `https://api.totob12.com/wolframalpha?query=${encodeURIComponent(query)}`;
     console.log(url);
     try {
@@ -38,6 +40,46 @@ async function queryWolframAlpha(query) {
     } catch (error) {
         console.error('Error querying Wolfram Alpha:', error);
         return { error: error };
+    }
+}
+
+async function searchInternet(query) {
+    query = btoa(query);
+    const url = `https://api.totob12.com/search/search?q=${encodeURIComponent(query)}`;
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error(error);
+        return { error: error.message };
+    }
+}
+
+async function searchImages(query) {
+    query = btoa(query);
+    const url = `https://api.totob12.com/search/images?q=${encodeURIComponent(query)}`;
+    try {
+        const response = await fetch(url);
+        let data = await response.json();
+        data.images = data.images.slice(0, 10);
+        return data;
+    } catch (error) {
+        console.error(error);
+        return { error: error.message };
+    }
+}
+
+async function lookWebpage(link) {
+    link = btoa(link);
+    const url = `https://api.totob12.com/search/webpage?url=${encodeURIComponent(link)}`;
+    try {
+        const response = await fetch(url);
+        let data = await response.json();
+        return data;
+    } catch (error) {
+        console.error(error);
+        return { error: error.message };
     }
 }
 
@@ -53,6 +95,15 @@ export const functions = {
     },
     queryWolframAlpha: ({ query }) => {
         return queryWolframAlpha(query);
+    },
+    searchInternet: ({ query }) => {
+        return searchInternet(query);
+    },
+    searchImages: ({ query }) => {
+        return searchImages(query);
+    },
+    lookWebpage: ({ link }) => {
+        return lookWebpage(link);
     },
 };
 
@@ -101,6 +152,48 @@ export const tools = [
                 },
             },
             required: ["query"],
+        },
+    },
+    {
+        name: "searchInternet",
+        parameters: {
+            type: "OBJECT",
+            description: "Search the internet for information",
+            properties: {
+                query: {
+                    type: "STRING",
+                    description: "The query to search the internet for",
+                },
+            },
+            required: ["query"],
+        },
+    },
+    {
+        name: "searchImages",
+        parameters: {
+            type: "OBJECT",
+            description: "Search the internet for images",
+            properties: {
+                query: {
+                    type: "STRING",
+                    description: "The query to search the internet for images",
+                },
+            },
+            required: ["query"],
+        },
+    },
+    {
+        name: "lookWebpage",
+        parameters: {
+            type: "OBJECT",
+            description: "Look up a webpage; gets you the text content of the webpage",
+            properties: {
+                link: {
+                    type: "STRING",
+                    description: "The URL of the webpage to look up",
+                },
+            },
+            required: ["link"],
         },
     },
 ];

@@ -311,7 +311,7 @@ body {
     padding: 0.5rem;
     min-height: 1.5rem;
     outline: none;
-    color: var(--text-primary);
+    color: var(--white);
     flex: 1;
 }
 
@@ -514,8 +514,8 @@ button {
 }
 
 .send-button {
-    width: 3rem;
-    height: 3rem;
+    width: 2.5rem;
+    height: 2.5rem;
     background-color: var(--send-color);
     border-radius: 50%;
     color: var(--text-primary);
