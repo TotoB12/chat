@@ -130,7 +130,7 @@ export const tools = [
         name: "generateImage",
         parameters: {
             type: "OBJECT",
-            description: "Generate an image with the given text using AI",
+            description: "Generate and create an image with the given text",
             properties: {
                 query: {
                     type: "STRING",
