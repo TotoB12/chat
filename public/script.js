@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "https://esm.run/@google/generative-ai";
 import { marked } from "https://esm.run/marked";
+import { markedHighlight } from "https://esm.run/marked-highlight";
+import hljs from "https://esm.run/highlight.js";
 import { functions, tools } from './tools.js';
 import markedKatex from "https://esm.run/marked-katex-extension";
 import createDOMPurify from "https://esm.run/dompurify";
@@ -9,6 +11,14 @@ const katexOptions = {
 };
 
 marked.use(markedKatex(katexOptions));
+
+marked.use(markedHighlight({
+  langPrefix: 'hljs language-',
+  highlight(code, lang) {
+    const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+    return hljs.highlight(code, { language }).value;
+  }
+}));
 
 const DOMPurify = createDOMPurify(window);
 
@@ -107,10 +117,10 @@ Antonin Beliard is a 17-year-old student at **Rochambeau, The French Internation
 Your function is to answer users’ questions and fulfill their requests, regardless of the topic. You have access to a variety of search engines and other tools to find information and deliver comprehensive, relevant answers. If a question is unrelated to the tools at your disposal, you should still provide a direct, helpful response.
 
 **Style & Formatting Guidelines**  
-- Respond with full sentences, proper grammar, and correct spelling, unless the user requests otherwise.  
-- ALWAYS respond in Markdown, using formatting elements—headings, lists, images, tables, code blocks, and LaTeX for math—to make your answers clear and engaging.  
-- Your environment supports the rendering and display of images using Markdown. When rendering images, USE THE FORMAT: \`![image](image_url)\`.  
-- For math, use LaTeX: \`$...$\` for inline math and \`$$...$$\` for display math.  
+- Respond with full sentences, proper grammar, and correct spelling, unless the user requests otherwise. 
+- ALWAYS respond in Markdown, using formatting elements—headings, lists, images, tables, code blocks, and LaTeX for math—to make your answers clear and engaging. 
+- Your environment supports the rendering and display of images using Markdown. When rendering images, USE THE FORMAT: \`![image](image_url)\`. 
+- For math, use LaTeX: \`$...$\` for inline math and \`$$...$$\` for display math. 
 - Be creative in using visuals: embed media, tables, and other formatting to enhance readability and clarity.
 
 **Tools & Media**  
@@ -310,7 +320,7 @@ async function processMessageParts(messageParts, assistantMessageEl) {
 
         const parsedContent = marked.parse(fullResponse);
         const sanitizedContent = DOMPurify.sanitize(parsedContent, {
-            ADD_TAGS: ['math', 'mrow', 'mi', 'mo', 'mn', 'msqrt', 'mfrac', 'msup', 'msub'],
+            ADD_TAGS: ['math', 'mrow', 'mi', 'mo', 'mn', 'msqrt', 'mfrac', 'msup', 'msub', 'code', 'pre'],
             ADD_ATTR: ['class', 'style', 'aria-hidden', 'focusable', 'role', 'tabindex', 'viewBox', 'xmlns', 'd'],
         });
         assistantMessageEl.innerHTML = sanitizedContent;
@@ -564,7 +574,7 @@ function addMessageToChat(role, content, attachments = []) {
 
     const parsedContent = marked.parse(content);
     const sanitizedContent = DOMPurify.sanitize(parsedContent, {
-        ADD_TAGS: ['math', 'mrow', 'mi', 'mo', 'mn', 'msqrt', 'mfrac', 'msup', 'msub'],
+        ADD_TAGS: ['math', 'mrow', 'mi', 'mo', 'mn', 'msqrt', 'mfrac', 'msup', 'msub', 'code', 'pre'],
         ADD_ATTR: ['class', 'style', 'aria-hidden', 'focusable', 'role', 'tabindex', 'viewBox', 'xmlns', 'd'],
     });
 
