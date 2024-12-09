@@ -129,7 +129,6 @@ TotoB12: ![image](https://example.com/eiffel_tower.jpg) ![image](https://example
 
     model = genAI.getGenerativeModel({
         // model: "gemini-1.5-flash",
-        // model: "gemini-1.5-pro",
         model: "gemini-exp-1206",
         generationConfig: {
             temperature: 1.0,
