@@ -27,17 +27,6 @@ body {
     flex-direction: column;
 }
 
-/* html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-} */
-
-/* html {
-    overflow: scroll;
-} */
-
 ::-webkit-scrollbar {
     width: 0px;
     background: transparent;
@@ -106,6 +95,74 @@ body {
     padding: 0 0.5rem;
 }
 
+.show-key-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+}
+
+.error-settings-message {
+    color: var(--error-color);
+    margin-bottom: 1rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    margin: 0 1rem;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--text-primary);
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--bg-tertiary);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
 .header {
     position: absolute;
     top: 0;
@@ -117,20 +174,6 @@ body {
     align-items: center;
     padding: 1rem;
     z-index: 100;
-}
-
-.header h1 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.header .icon-button {
-    color: var(--text-secondary);
-}
-
-.header .icon-button:hover {
-    color: var(--text-primary);
 }
 
 .chat-container {
@@ -198,12 +241,10 @@ body {
 .processing-text {
     background: linear-gradient(270deg, #FFFFFF, #BBBBBB, #DDDDDD);
     background-size: 200% 100%;
-    
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     color: transparent;
-
     animation: gradientMoves 800ms linear infinite;
 }
 
@@ -449,7 +490,7 @@ button {
     justify-content: center;
     gap: 1rem;
     color: var(--text-primary);
-    border: 3px dashed var(--accent-color);
+    border: 3px dashed var(--border-color);
     margin: 2rem;
     border-radius: 16px;
 }

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,24 +16,61 @@
 </head>
 
 <body>
-    <div id="api-key-modal" class="modal">
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
         <div class="modal-content">
-            <h2>Welcome</h2>
-            <p>Enter your Google Gemini API key:</p>
-            <p>Get it here: <a href="https://aistudio.google.com/app" rel="noopener"
-                    target="_blank">https://aistudio.google.com/app</a></p>
-            <div class="input-wrapper">
-                <input type="password" id="api-key-input" placeholder=" ">
-                <label for="api-key-input">API Key</label>
+            <h2>Settings</h2>
+            <p id="settings-error-message" class="error-settings-message" style="display:none;"></p>
+            <div class="toggle-container">
+                <span>Use App Key</span>
+                <label class="switch">
+                    <input type="checkbox" id="key-mode-toggle">
+                    <span class="slider"></span>
+                </label>
+                <span>Use Personal Key</span>
             </div>
-            <button id="save-api-key">Continue</button>
+            <div id="personal-key-section" style="display:none;">
+                <div class="input-wrapper">
+                    <input type="password" id="personal-api-key-input" placeholder=" " autocomplete="off">
+                    <label for="personal-api-key-input">Personal API Key</label>
+                </div>
+                <div class="show-key-container">
+                    <input type="checkbox" id="show-key-toggle">
+                    <label for="show-key-toggle">Show Key</label>
+                </div>
+            </div>
+            <button id="close-settings-modal">Close</button>
         </div>
     </div>
 
     <header class="header">
-        <button id="clear-key" class="icon-button" title="Clear API Key">
+        <!-- Replace clear-key with settings -->
+        <button id="open-settings" class="icon-button" title="Settings">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 
+                0 0 1-2.83 2.83l-.06-.06a1.65 1.65 
+                0 0 0-1.82-.33 1.65 1.65 0 0 0-1 
+                1.51V21a2 2 0 0 1-2 2h0a2 2 0 0 
+                1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 
+                1.65 1.65 0 0 0-1.82.33l-.06.06a2 
+                2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 
+                0 0 0 3 15.4a1.65 1.65 0 0 
+                0-1.51-1H1a2 2 0 0 1-2-2h0a2 
+                2 0 0 1 2-2h.09a1.65 1.65 0 0 
+                0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 
+                2 0 0 1 2.83-2.83l.06.06a1.65 1.65 
+                0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 
+                2 0 0 1 2-2h0a2 2 0 0 
+                1 2 2v.09a1.65 1.65 0 0 
+                0 1 1.51 1.65 1.65 0 0 
+                0 1.82-.33l.06-.06a2 2 0 0 
+                1 2.83 2.83l-.06.06a1.65 1.65 
+                0 0 0-.33 1.82V9a1.65 1.65 
+                0 0 0 1.51 1H21a2 2 0 0 
+                1 2 2h0a2 2 0 0 
+                1-2 2h-.09a1.65 1.65 0 0 
+                0-1.51 1z"></path>
             </svg>
         </button>
     </header>
@@ -96,5 +132,4 @@
 
     <script type="module" src="script.js"></script>
 </body>
-
 </html>

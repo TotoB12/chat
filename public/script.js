@@ -23,53 +23,30 @@ marked.use(markedHighlight({
 const DOMPurify = createDOMPurify(window);
 
 const API_KEY_STORAGE_KEY = 'gemini-api-key';
+const MODE_STORAGE_KEY = 'key-mode'; // 'app' or 'personal'
+const DEFAULT_MODE = 'app';
+
 let model;
 let chat;
 let attachedFiles = [];
 let dragCounter = 0;
 let currentFileIndex = 0;
 let currentFiles = [];
-
 let chatHistoryData = [];
-
-const toolTexts = {
-    getDateAndTime: {
-        processing: "Retrieving current date and time...",
-        done: "Retrieved current date and time."
-    },
-    getWeather: {
-        processing: "Retrieving weather data...",
-        done: "Retrieved weather data."
-    },
-    generateImage: {
-        processing: "Generating image...",
-        done: "Generated image."
-    },
-    queryWolframAlpha: {
-        processing: "Querying Wolfram Alpha...",
-        done: "Queried Wolfram Alpha."
-    },
-    searchInternet: {
-        processing: "Searching online...",
-        done: "Searched the internet."
-    },
-    searchImages: {
-        processing: "Searching for images...",
-        done: "Searched for images."
-    },
-    lookWebpage: {
-        processing: "Looking up webpage...",
-        done: "Looked up webpage."
-    },
-};
-
+let keysList = [];
 let currentDoneTexts = [];
 
 // DOM Elements
-const apiKeyModal = document.getElementById('api-key-modal');
-const apiKeyInput = document.getElementById('api-key-input');
-const saveApiKeyBtn = document.getElementById('save-api-key');
-const clearKeyBtn = document.getElementById('clear-key');
+const settingsModal = document.getElementById('settings-modal');
+const settingsErrorMessage = document.getElementById('settings-error-message');
+const keyModeToggle = document.getElementById('key-mode-toggle');
+const personalKeySection = document.getElementById('personal-key-section');
+const personalApiKeyInput = document.getElementById('personal-api-key-input');
+const showKeyToggle = document.getElementById('show-key-toggle');
+
+const openSettingsBtn = document.getElementById('open-settings');
+const closeSettingsModalBtn = document.getElementById('close-settings-modal');
+
 const chatForm = document.getElementById('chat-form');
 const messageInput = document.getElementById('message-input');
 const chatHistory = document.getElementById('chat-history');
@@ -84,10 +61,20 @@ const viewerVideo = document.getElementById('viewer-video');
 const prevButton = document.querySelector('.viewer-nav.prev');
 const nextButton = document.querySelector('.viewer-nav.next');
 
-async function initializeChat() {
-    const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-    if (!apiKey) return;
+// Initialization
+async function loadAppKeys() {
+    try {
+        const response = await fetch('./keys');
+        if (!response.ok) throw new Error('Failed to load keys file');
+        const text = await response.text();
+        keysList = text.split('\n').map(k => k.trim()).filter(k => k !== '');
+    } catch (error) {
+        console.error('Error loading keys:', error);
+        keysList = [];
+    }
+}
 
+async function initializeModel(apiKey) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const safetySettings = [
         {
@@ -138,7 +125,6 @@ User: Show me images of the Eiffel Tower.
 TotoB12: ![image](https://example.com/eiffel_tower.jpg) ![image](https://example.com/eiffel_tower2.jpg)`;
 
     model = genAI.getGenerativeModel({
-        // model: "gemini-1.5-flash",
         model: "gemini-exp-1206",
         generationConfig: {
             temperature: 1.0,
@@ -149,23 +135,103 @@ TotoB12: ![image](https://example.com/eiffel_tower.jpg) ![image](https://example
     });
 }
 
-saveApiKeyBtn.addEventListener('click', () => {
-    const apiKey = apiKeyInput.value.trim();
-    if (apiKey) {
-        localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
-        apiKeyModal.style.display = 'none';
-        initializeChat();
+// Load keys and set defaults
+await loadAppKeys();
+
+function getMode() {
+    let mode = localStorage.getItem(MODE_STORAGE_KEY);
+    if (!mode) {
+        mode = DEFAULT_MODE;
+        localStorage.setItem(MODE_STORAGE_KEY, mode);
+    }
+    return mode;
+}
+
+function setMode(mode) {
+    localStorage.setItem(MODE_STORAGE_KEY, mode);
+}
+
+function getPersonalKey() {
+    return localStorage.getItem(API_KEY_STORAGE_KEY) || '';
+}
+
+function setPersonalKey(key) {
+    localStorage.setItem(API_KEY_STORAGE_KEY, key);
+}
+
+// Open/close settings modal
+openSettingsBtn.addEventListener('click', () => {
+    openSettingsModal();
+});
+
+closeSettingsModalBtn.addEventListener('click', () => {
+    closeSettingsModal();
+});
+
+function openSettingsModal(errorMessage='') {
+    const currentMode = getMode();
+    keyModeToggle.checked = (currentMode === 'personal');
+    personalKeySection.style.display = currentMode === 'personal' ? 'block' : 'none';
+    personalApiKeyInput.value = getPersonalKey();
+    settingsErrorMessage.style.display = errorMessage ? 'block' : 'none';
+    settingsErrorMessage.innerText = errorMessage;
+    settingsModal.style.display = 'flex';
+}
+
+function closeSettingsModal() {
+    settingsModal.style.display = 'none';
+}
+
+// Toggle Mode
+keyModeToggle.addEventListener('change', () => {
+    if (keyModeToggle.checked) {
+        // Use personal mode
+        setMode('personal');
+        personalKeySection.style.display = 'block';
+    } else {
+        // Use app mode
+        setMode('app');
+        personalKeySection.style.display = 'none';
     }
 });
 
-clearKeyBtn.addEventListener('click', () => {
-    localStorage.removeItem(API_KEY_STORAGE_KEY);
-    chat = null;
-    model = null;
-    chatHistoryData = [];
-    chatHistory.innerHTML = '';
-    apiKeyModal.style.display = 'flex';
+// Personal key input changes
+personalApiKeyInput.addEventListener('input', () => {
+    setPersonalKey(personalApiKeyInput.value.trim());
 });
+
+// Show/hide personal key
+showKeyToggle.addEventListener('change', () => {
+    personalApiKeyInput.type = showKeyToggle.checked ? 'text' : 'password';
+});
+
+// Initialization logic
+async function initializeChat() {
+    const mode = getMode();
+    let apiKeyToUse = '';
+    if (mode === 'app') {
+        // Use app keys
+        if (!keysList || keysList.length === 0) {
+            // No keys available
+            openSettingsModal("No app keys available. Please set a personal key.");
+            return null;
+        }
+        // Pick a random key
+        const randomIndex = Math.floor(Math.random() * keysList.length);
+        apiKeyToUse = keysList[randomIndex];
+    } else {
+        // Use personal key
+        apiKeyToUse = getPersonalKey();
+        if (!apiKeyToUse) {
+            // Personal key not set
+            openSettingsModal("Please set your API key, or switch to App Key.");
+            return null;
+        }
+    }
+
+    await initializeModel(apiKeyToUse);
+    return apiKeyToUse;
+}
 
 uploadButton.addEventListener('click', (e) => {
     e.preventDefault();
@@ -191,61 +257,14 @@ chatForm.addEventListener('submit', (e) => {
     handleSubmit();
 });
 
-function handlePasteEvent(e) {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const clipboardItems = e.clipboardData.items;
-    let foundFiles = false;
-    let foundText = false;
-    let pastedText = '';
-
-    for (const item of clipboardItems) {
-        if (item.kind === 'file') {
-            const file = item.getAsFile();
-            if (file && (
-                file.type.startsWith('image/') ||
-                file.type.startsWith('video/') ||
-                file.type.startsWith('audio/') ||
-                file.type.startsWith('text/') ||
-                file.type.startsWith('application/pdf')
-            )) {
-                foundFiles = true;
-                attachedFiles.push(file);
-                displayAttachmentPreview(file);
-            }
-        } else if (item.kind === 'string' && item.type === 'text/plain') {
-            foundText = true;
-            item.getAsString((text) => {
-                pastedText += text;
-                setTimeout(() => {
-                    if (pastedText && !foundFiles) {
-                        insertPlainTextAtCursor(messageInput, pastedText);
-                    }
-                }, 0);
-            });
-        }
-    }
-
-    if (!foundText && !foundFiles) {
-        const text = e.clipboardData.getData('text/plain');
-        if (text) {
-            insertPlainTextAtCursor(messageInput, text);
-        }
-    }
-}
-
-function insertPlainTextAtCursor(element, text) {
-    document.execCommand('insertText', false, text);
-}
-
 async function handleSubmit() {
-    if (!localStorage.getItem(API_KEY_STORAGE_KEY)) {
-        apiKeyModal.style.display = 'flex';
+    const mode = getMode();
+    // Check if we have what we need
+    let apiKeyInUse = await initializeChat();
+    if (!apiKeyInUse || !model) {
+        // Initialization failed, probably settings issue
         return;
     }
-
-    if (!model) await initializeChat();
 
     const message = messageInput.innerText.trim();
     if (!message && attachedFiles.length === 0) return;
@@ -255,7 +274,6 @@ async function handleSubmit() {
     try {
         addMessageToChat('user', message, currentAttachedFiles);
         messageInput.innerText = '';
-
         attachmentPreviewsContainer.innerHTML = '';
 
         const fileParts = await processAttachedFiles(currentAttachedFiles);
@@ -293,7 +311,6 @@ async function processMessageParts(messageParts, assistantMessageEl) {
         return;
     }
 
-    console.log(chat);
     response = await chat.sendMessageStream(messageParts);
 
     let toolCalls = [];
@@ -358,9 +375,6 @@ async function processMessageParts(messageParts, assistantMessageEl) {
 async function useTools(toolCalls, assistantMessageEl) {
     const toolResults = [];
     for (const tool of toolCalls) {
-        console.log("Tool name: " + tool.name);
-        console.log("Tool args: " + JSON.stringify(tool.args));
-
         const processingText = toolTexts[tool.name]?.processing || "Processing...";
         const processingEl = document.createElement('div');
         processingEl.className = 'processing-text';
@@ -385,13 +399,86 @@ async function useTools(toolCalls, assistantMessageEl) {
         });
     }
 
-    console.log("Tool results getting fed back:");
-    for (const toolResult of toolResults) {
-        console.log(toolResult.functionResponse.name);
-        console.log(toolResult.functionResponse.response);
+    return toolResults;
+}
+
+const toolTexts = {
+    getDateAndTime: {
+        processing: "Retrieving current date and time...",
+        done: "Retrieved current date and time."
+    },
+    getWeather: {
+        processing: "Retrieving weather data...",
+        done: "Retrieved weather data."
+    },
+    generateImage: {
+        processing: "Generating image...",
+        done: "Generated image."
+    },
+    queryWolframAlpha: {
+        processing: "Querying Wolfram Alpha...",
+        done: "Queried Wolfram Alpha."
+    },
+    searchInternet: {
+        processing: "Searching online...",
+        done: "Searched the internet."
+    },
+    searchImages: {
+        processing: "Searching for images...",
+        done: "Searched for images."
+    },
+    lookWebpage: {
+        processing: "Looking up webpage...",
+        done: "Looked up webpage."
+    },
+};
+
+function handlePasteEvent(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const clipboardItems = e.clipboardData.items;
+    let foundFiles = false;
+    let foundText = false;
+    let pastedText = '';
+
+    for (const item of clipboardItems) {
+        if (item.kind === 'file') {
+            const file = item.getAsFile();
+            if (file && (
+                file.type.startsWith('image/') ||
+                file.type.startsWith('video/') ||
+                file.type.startsWith('audio/') ||
+                file.type.startsWith('text/') ||
+                file.type.startsWith('application/pdf')
+            )) {
+                foundFiles = true;
+                attachedFiles.push(file);
+                displayAttachmentPreview(file);
+            }
+        } else if (item.kind === 'string' && item.type === 'text/plain') {
+            foundText = true;
+            item.getAsString((text) => {
+                pastedText += text;
+                setTimeout(() => {
+                    if (pastedText && !foundFiles) {
+                        insertPlainTextAtCursor(messageInput, pastedText);
+                    }
+                }, 0);
+            });
+        }
     }
 
-    return toolResults;
+    if (!foundText && !foundFiles) {
+        const text = e.clipboardData.getData('text/plain');
+        if (text) {
+            insertPlainTextAtCursor(messageInput, text);
+        }
+    }
+}
+
+function insertPlainTextAtCursor(element, text) {
+    document.execCommand('insertText', false, text);
 }
 
 function handleFiles(files) {
@@ -461,7 +548,13 @@ async function processAttachedFiles(files) {
 }
 
 async function uploadFile(file) {
-    const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+    // Decide which key to use again each time upload occurs
+    // In case mode changes or anything, we re-initialize
+    const apiKey = await initializeChat();
+    if (!apiKey) {
+        throw new Error('No API key available for upload.');
+    }
+
     const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`;
 
     // Add event message
@@ -511,7 +604,6 @@ async function uploadFile(file) {
 
         while (fileState === 'PROCESSING') {
             eventMessage.querySelector('.message-content').innerText = `Processing file ${file.name}, please wait...`;
-            console.log(`Processing file ${file.name}, please wait...`);
             await new Promise(resolve => setTimeout(resolve, 3000));
 
             const fileStatusResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`);
@@ -613,10 +705,6 @@ function removeEventMessage(eventDiv) {
 
 function scrollToBottom() {
     chatHistory.scrollTop = chatHistory.scrollHeight;
-}
-
-if (localStorage.getItem(API_KEY_STORAGE_KEY)) {
-    initializeChat();
 }
 
 ['dragenter', 'dragover'].forEach(eventName => {
