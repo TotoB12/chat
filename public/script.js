@@ -125,7 +125,8 @@ User: Show me images of the Eiffel Tower.
 TotoB12: ![image](https://example.com/eiffel_tower.jpg) ![image](https://example.com/eiffel_tower2.jpg)`;
 
     model = genAI.getGenerativeModel({
-        model: "gemini-exp-1206",
+        model: "gemini-2.0-flash-exp",
+        // model: "gemini-exp-1206",
         generationConfig: {
             temperature: 1.0,
         },
@@ -375,6 +376,9 @@ async function processMessageParts(messageParts, assistantMessageEl) {
 async function useTools(toolCalls, assistantMessageEl) {
     const toolResults = [];
     for (const tool of toolCalls) {
+        console.log("Tool name: " + tool.name);
+        console.log("Tool args: " + JSON.stringify(tool.args));
+
         const processingText = toolTexts[tool.name]?.processing || "Processing...";
         const processingEl = document.createElement('div');
         processingEl.className = 'processing-text';
@@ -397,6 +401,12 @@ async function useTools(toolCalls, assistantMessageEl) {
                 response: output,
             },
         });
+    }
+
+    console.log("Tool results getting fed back:");
+    for (const toolResult of toolResults) {
+        console.log(toolResult.functionResponse.name);
+        console.log(toolResult.functionResponse.response);
     }
 
     return toolResults;
