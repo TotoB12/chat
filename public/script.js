@@ -47,6 +47,8 @@ const showKeyToggle = document.getElementById('show-key-toggle');
 const openSettingsBtn = document.getElementById('open-settings');
 const closeSettingsModalBtn = document.getElementById('close-settings-modal');
 
+const greetingContainer = document.getElementById('greeting-container');
+const suggestionBubbles = document.querySelectorAll('.suggestion-bubble');
 const chatForm = document.getElementById('chat-form');
 const messageInput = document.getElementById('message-input');
 const chatHistory = document.getElementById('chat-history');
@@ -258,12 +260,17 @@ chatForm.addEventListener('submit', (e) => {
     handleSubmit();
 });
 
+function hideGreetingIfVisible() {
+    if (greetingContainer && greetingContainer.style.display !== 'none') {
+        greetingContainer.style.display = 'none';
+    }
+}
+
 async function handleSubmit() {
+    hideGreetingIfVisible();
     const mode = getMode();
-    // Check if we have what we need
     let apiKeyInUse = await initializeChat();
     if (!apiKeyInUse || !model) {
-        // Initialization failed, probably settings issue
         return;
     }
 
@@ -302,6 +309,21 @@ async function handleSubmit() {
         attachedFiles = [];
     }
 }
+
+suggestionBubbles.forEach(bubble => {
+    bubble.addEventListener('click', () => {
+        const suggestion = bubble.dataset.suggestion || bubble.innerText;
+        messageInput.innerText = suggestion;
+        hideGreetingIfVisible();
+        handleSubmit();
+    });
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+    if (chatHistoryData && chatHistoryData.length > 0) {
+        greetingContainer.style.display = 'none';
+    }
+});
 
 async function processMessageParts(messageParts, assistantMessageEl) {
     let fullResponse = '';

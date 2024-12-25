@@ -4,7 +4,6 @@ public\index.html
 ```html
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,27 +20,53 @@ public\index.html
 </head>
 
 <body>
-    <div id="api-key-modal" class="modal">
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
         <div class="modal-content">
-            <h2>Welcome</h2>
-            <p>Enter your Google Gemini API key:</p>
-            <p>Get it here: <a href="https://aistudio.google.com/app" rel="noopener"
-                    target="_blank">https://aistudio.google.com/app</a></p>
-            <div class="input-wrapper">
-                <input type="password" id="api-key-input" placeholder=" ">
-                <label for="api-key-input">API Key</label>
+            <h2>Settings</h2>
+            <p id="settings-error-message" class="error-settings-message" style="display:none;"></p>
+            <div class="toggle-container">
+                <span>Use App Key</span>
+                <label class="switch">
+                    <input type="checkbox" id="key-mode-toggle">
+                    <span class="slider"></span>
+                </label>
+                <span>Use Personal Key</span>
             </div>
-            <button id="save-api-key">Continue</button>
+            <div id="personal-key-section" style="display:none;">
+                <div class="input-wrapper">
+                    <input type="password" id="personal-api-key-input" placeholder=" " autocomplete="off">
+                    <label for="personal-api-key-input">Personal API Key</label>
+                </div>
+                <div class="show-key-container">
+                    <input type="checkbox" id="show-key-toggle">
+                    <label for="show-key-toggle">Show Key</label>
+                </div>
+            </div>
+            <button id="close-settings-modal">Close</button>
         </div>
     </div>
 
     <header class="header">
-        <button id="clear-key" class="icon-button" title="Clear API Key">
+        <button id="open-settings" class="icon-button" title="Settings">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74457 2.35523 9.35522 2.74458 9.15223 3.23463C9.05957 3.45834 9.0233 3.7185 9.00911 4.09799C8.98826 4.65568 8.70226 5.17189 8.21894 5.45093C7.73564 5.72996 7.14559 5.71954 6.65219 5.45876C6.31645 5.2813 6.07301 5.18262 5.83294 5.15102C5.30704 5.08178 4.77518 5.22429 4.35436 5.5472C4.03874 5.78938 3.80577 6.1929 3.33983 6.99993C2.87389 7.80697 2.64092 8.21048 2.58899 8.60491C2.51976 9.1308 2.66227 9.66266 2.98518 10.0835C3.13256 10.2756 3.3397 10.437 3.66119 10.639C4.1338 10.936 4.43789 11.4419 4.43786 12C4.43783 12.5581 4.13375 13.0639 3.66118 13.3608C3.33965 13.5629 3.13248 13.7244 2.98508 13.9165C2.66217 14.3373 2.51966 14.8691 2.5889 15.395C2.64082 15.7894 2.87379 16.193 3.33973 17C3.80568 17.807 4.03865 18.2106 4.35426 18.4527C4.77508 18.7756 5.30694 18.9181 5.83284 18.8489C6.07289 18.8173 6.31632 18.7186 6.65204 18.5412C7.14547 18.2804 7.73556 18.27 8.2189 18.549C8.70224 18.8281 8.98826 19.3443 9.00911 19.9021C9.02331 20.2815 9.05957 20.5417 9.15223 20.7654C9.35522 21.2554 9.74457 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8477 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.902C15.0117 19.3443 15.2977 18.8281 15.781 18.549C16.2643 18.2699 16.8544 18.2804 17.3479 18.5412C17.6836 18.7186 17.927 18.8172 18.167 18.8488C18.6929 18.9181 19.2248 18.7756 19.6456 18.4527C19.9612 18.2105 20.1942 17.807 20.6601 16.9999C21.1261 16.1929 21.3591 15.7894 21.411 15.395C21.4802 14.8691 21.3377 14.3372 21.0148 13.9164C20.8674 13.7243 20.6602 13.5628 20.3387 13.3608C19.8662 13.0639 19.5621 12.558 19.5621 11.9999C19.5621 11.4418 19.8662 10.9361 20.3387 10.6392C20.6603 10.4371 20.8675 10.2757 21.0149 10.0835C21.3378 9.66273 21.4803 9.13087 21.4111 8.60497C21.3592 8.21055 21.1262 7.80703 20.6602 7C20.1943 6.19297 19.9613 5.78945 19.6457 5.54727C19.2249 5.22436 18.693 5.08185 18.1671 5.15109C17.9271 5.18269 17.6837 5.28136 17.3479 5.4588C16.8545 5.71959 16.2644 5.73002 15.7811 5.45096C15.2977 5.17191 15.0117 4.65566 14.9909 4.09794C14.9767 3.71848 14.9404 3.45833 14.8477 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224Z"/>
             </svg>
         </button>
     </header>
+
+    <div class="greeting-container" id="greeting-container">
+        <h1 class="greeting-title">What can I help with?</h1>
+        <div class="greeting-suggestions">
+            <div class="suggestion-bubble" data-suggestion="Get me the weather in New York">
+                Get me the weather in New York
+            </div>
+            <div class="suggestion-bubble" data-suggestion="Show me images of the Paris Olympics">
+                Show me images of the Paris Olympics
+            </div>
+        </div>
+    </div>
 
     <div class="chat-container">
         <div id="chat-history"></div>
@@ -100,7 +125,6 @@ public\index.html
 
     <script type="module" src="script.js"></script>
 </body>
-
 </html>
 
 ```
@@ -132,53 +156,32 @@ marked.use(markedHighlight({
 const DOMPurify = createDOMPurify(window);
 
 const API_KEY_STORAGE_KEY = 'gemini-api-key';
+const MODE_STORAGE_KEY = 'key-mode'; // 'app' or 'personal'
+const DEFAULT_MODE = 'app';
+
 let model;
 let chat;
 let attachedFiles = [];
 let dragCounter = 0;
 let currentFileIndex = 0;
 let currentFiles = [];
-
 let chatHistoryData = [];
-
-const toolTexts = {
-    getDateAndTime: {
-        processing: "Retrieving current date and time...",
-        done: "Retrieved current date and time."
-    },
-    getWeather: {
-        processing: "Retrieving weather data...",
-        done: "Retrieved weather data."
-    },
-    generateImage: {
-        processing: "Generating image...",
-        done: "Generated image."
-    },
-    queryWolframAlpha: {
-        processing: "Querying Wolfram Alpha...",
-        done: "Queried Wolfram Alpha."
-    },
-    searchInternet: {
-        processing: "Searching online...",
-        done: "Searched the internet."
-    },
-    searchImages: {
-        processing: "Searching for images...",
-        done: "Searched for images."
-    },
-    lookWebpage: {
-        processing: "Looking up webpage...",
-        done: "Looked up webpage."
-    },
-};
-
+let keysList = [];
 let currentDoneTexts = [];
 
 // DOM Elements
-const apiKeyModal = document.getElementById('api-key-modal');
-const apiKeyInput = document.getElementById('api-key-input');
-const saveApiKeyBtn = document.getElementById('save-api-key');
-const clearKeyBtn = document.getElementById('clear-key');
+const settingsModal = document.getElementById('settings-modal');
+const settingsErrorMessage = document.getElementById('settings-error-message');
+const keyModeToggle = document.getElementById('key-mode-toggle');
+const personalKeySection = document.getElementById('personal-key-section');
+const personalApiKeyInput = document.getElementById('personal-api-key-input');
+const showKeyToggle = document.getElementById('show-key-toggle');
+
+const openSettingsBtn = document.getElementById('open-settings');
+const closeSettingsModalBtn = document.getElementById('close-settings-modal');
+
+const greetingContainer = document.getElementById('greeting-container');
+const suggestionBubbles = document.querySelectorAll('.suggestion-bubble');
 const chatForm = document.getElementById('chat-form');
 const messageInput = document.getElementById('message-input');
 const chatHistory = document.getElementById('chat-history');
@@ -193,10 +196,20 @@ const viewerVideo = document.getElementById('viewer-video');
 const prevButton = document.querySelector('.viewer-nav.prev');
 const nextButton = document.querySelector('.viewer-nav.next');
 
-async function initializeChat() {
-    const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-    if (!apiKey) return;
+// Initialization
+async function loadAppKeys() {
+    try {
+        const response = await fetch('./keys');
+        if (!response.ok) throw new Error('Failed to load keys file');
+        const text = await response.text();
+        keysList = text.split('\n').map(k => k.trim()).filter(k => k !== '');
+    } catch (error) {
+        console.error('Error loading keys:', error);
+        keysList = [];
+    }
+}
 
+async function initializeModel(apiKey) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const safetySettings = [
         {
@@ -247,8 +260,8 @@ User: Show me images of the Eiffel Tower.
 TotoB12: ![image](https://example.com/eiffel_tower.jpg) ![image](https://example.com/eiffel_tower2.jpg)`;
 
     model = genAI.getGenerativeModel({
-        // model: "gemini-1.5-flash",
-        model: "gemini-exp-1206",
+        model: "gemini-2.0-flash-exp",
+        // model: "gemini-exp-1206",
         generationConfig: {
             temperature: 1.0,
         },
@@ -258,23 +271,103 @@ TotoB12: ![image](https://example.com/eiffel_tower.jpg) ![image](https://example
     });
 }
 
-saveApiKeyBtn.addEventListener('click', () => {
-    const apiKey = apiKeyInput.value.trim();
-    if (apiKey) {
-        localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
-        apiKeyModal.style.display = 'none';
-        initializeChat();
+// Load keys and set defaults
+await loadAppKeys();
+
+function getMode() {
+    let mode = localStorage.getItem(MODE_STORAGE_KEY);
+    if (!mode) {
+        mode = DEFAULT_MODE;
+        localStorage.setItem(MODE_STORAGE_KEY, mode);
+    }
+    return mode;
+}
+
+function setMode(mode) {
+    localStorage.setItem(MODE_STORAGE_KEY, mode);
+}
+
+function getPersonalKey() {
+    return localStorage.getItem(API_KEY_STORAGE_KEY) || '';
+}
+
+function setPersonalKey(key) {
+    localStorage.setItem(API_KEY_STORAGE_KEY, key);
+}
+
+// Open/close settings modal
+openSettingsBtn.addEventListener('click', () => {
+    openSettingsModal();
+});
+
+closeSettingsModalBtn.addEventListener('click', () => {
+    closeSettingsModal();
+});
+
+function openSettingsModal(errorMessage='') {
+    const currentMode = getMode();
+    keyModeToggle.checked = (currentMode === 'personal');
+    personalKeySection.style.display = currentMode === 'personal' ? 'block' : 'none';
+    personalApiKeyInput.value = getPersonalKey();
+    settingsErrorMessage.style.display = errorMessage ? 'block' : 'none';
+    settingsErrorMessage.innerText = errorMessage;
+    settingsModal.style.display = 'flex';
+}
+
+function closeSettingsModal() {
+    settingsModal.style.display = 'none';
+}
+
+// Toggle Mode
+keyModeToggle.addEventListener('change', () => {
+    if (keyModeToggle.checked) {
+        // Use personal mode
+        setMode('personal');
+        personalKeySection.style.display = 'block';
+    } else {
+        // Use app mode
+        setMode('app');
+        personalKeySection.style.display = 'none';
     }
 });
 
-clearKeyBtn.addEventListener('click', () => {
-    localStorage.removeItem(API_KEY_STORAGE_KEY);
-    chat = null;
-    model = null;
-    chatHistoryData = [];
-    chatHistory.innerHTML = '';
-    apiKeyModal.style.display = 'flex';
+// Personal key input changes
+personalApiKeyInput.addEventListener('input', () => {
+    setPersonalKey(personalApiKeyInput.value.trim());
 });
+
+// Show/hide personal key
+showKeyToggle.addEventListener('change', () => {
+    personalApiKeyInput.type = showKeyToggle.checked ? 'text' : 'password';
+});
+
+// Initialization logic
+async function initializeChat() {
+    const mode = getMode();
+    let apiKeyToUse = '';
+    if (mode === 'app') {
+        // Use app keys
+        if (!keysList || keysList.length === 0) {
+            // No keys available
+            openSettingsModal("No app keys available. Please set a personal key.");
+            return null;
+        }
+        // Pick a random key
+        const randomIndex = Math.floor(Math.random() * keysList.length);
+        apiKeyToUse = keysList[randomIndex];
+    } else {
+        // Use personal key
+        apiKeyToUse = getPersonalKey();
+        if (!apiKeyToUse) {
+            // Personal key not set
+            openSettingsModal("Please set your API key, or switch to App Key.");
+            return null;
+        }
+    }
+
+    await initializeModel(apiKeyToUse);
+    return apiKeyToUse;
+}
 
 uploadButton.addEventListener('click', (e) => {
     e.preventDefault();
@@ -300,61 +393,19 @@ chatForm.addEventListener('submit', (e) => {
     handleSubmit();
 });
 
-function handlePasteEvent(e) {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const clipboardItems = e.clipboardData.items;
-    let foundFiles = false;
-    let foundText = false;
-    let pastedText = '';
-
-    for (const item of clipboardItems) {
-        if (item.kind === 'file') {
-            const file = item.getAsFile();
-            if (file && (
-                file.type.startsWith('image/') ||
-                file.type.startsWith('video/') ||
-                file.type.startsWith('audio/') ||
-                file.type.startsWith('text/') ||
-                file.type.startsWith('application/pdf')
-            )) {
-                foundFiles = true;
-                attachedFiles.push(file);
-                displayAttachmentPreview(file);
-            }
-        } else if (item.kind === 'string' && item.type === 'text/plain') {
-            foundText = true;
-            item.getAsString((text) => {
-                pastedText += text;
-                setTimeout(() => {
-                    if (pastedText && !foundFiles) {
-                        insertPlainTextAtCursor(messageInput, pastedText);
-                    }
-                }, 0);
-            });
-        }
+function hideGreetingIfVisible() {
+    if (greetingContainer && greetingContainer.style.display !== 'none') {
+        greetingContainer.style.display = 'none';
     }
-
-    if (!foundText && !foundFiles) {
-        const text = e.clipboardData.getData('text/plain');
-        if (text) {
-            insertPlainTextAtCursor(messageInput, text);
-        }
-    }
-}
-
-function insertPlainTextAtCursor(element, text) {
-    document.execCommand('insertText', false, text);
 }
 
 async function handleSubmit() {
-    if (!localStorage.getItem(API_KEY_STORAGE_KEY)) {
-        apiKeyModal.style.display = 'flex';
+    hideGreetingIfVisible();
+    const mode = getMode();
+    let apiKeyInUse = await initializeChat();
+    if (!apiKeyInUse || !model) {
         return;
     }
-
-    if (!model) await initializeChat();
 
     const message = messageInput.innerText.trim();
     if (!message && attachedFiles.length === 0) return;
@@ -364,7 +415,6 @@ async function handleSubmit() {
     try {
         addMessageToChat('user', message, currentAttachedFiles);
         messageInput.innerText = '';
-
         attachmentPreviewsContainer.innerHTML = '';
 
         const fileParts = await processAttachedFiles(currentAttachedFiles);
@@ -393,6 +443,21 @@ async function handleSubmit() {
     }
 }
 
+suggestionBubbles.forEach(bubble => {
+    bubble.addEventListener('click', () => {
+        const suggestion = bubble.dataset.suggestion || bubble.innerText;
+        messageInput.innerText = suggestion;
+        hideGreetingIfVisible();
+        handleSubmit();
+    });
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+    if (chatHistoryData && chatHistoryData.length > 0) {
+        greetingContainer.style.display = 'none';
+    }
+});
+
 async function processMessageParts(messageParts, assistantMessageEl) {
     let fullResponse = '';
     let response;
@@ -402,7 +467,6 @@ async function processMessageParts(messageParts, assistantMessageEl) {
         return;
     }
 
-    console.log(chat);
     response = await chat.sendMessageStream(messageParts);
 
     let toolCalls = [];
@@ -503,6 +567,85 @@ async function useTools(toolCalls, assistantMessageEl) {
     return toolResults;
 }
 
+const toolTexts = {
+    getDateAndTime: {
+        processing: "Retrieving current date and time...",
+        done: "Retrieved current date and time."
+    },
+    getWeather: {
+        processing: "Retrieving weather data...",
+        done: "Retrieved weather data."
+    },
+    generateImage: {
+        processing: "Generating image...",
+        done: "Generated image."
+    },
+    queryWolframAlpha: {
+        processing: "Querying Wolfram Alpha...",
+        done: "Queried Wolfram Alpha."
+    },
+    searchInternet: {
+        processing: "Searching online...",
+        done: "Searched the internet."
+    },
+    searchImages: {
+        processing: "Searching for images...",
+        done: "Searched for images."
+    },
+    lookWebpage: {
+        processing: "Looking up webpage...",
+        done: "Looked up webpage."
+    },
+};
+
+function handlePasteEvent(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const clipboardItems = e.clipboardData.items;
+    let foundFiles = false;
+    let foundText = false;
+    let pastedText = '';
+
+    for (const item of clipboardItems) {
+        if (item.kind === 'file') {
+            const file = item.getAsFile();
+            if (file && (
+                file.type.startsWith('image/') ||
+                file.type.startsWith('video/') ||
+                file.type.startsWith('audio/') ||
+                file.type.startsWith('text/') ||
+                file.type.startsWith('application/pdf')
+            )) {
+                foundFiles = true;
+                attachedFiles.push(file);
+                displayAttachmentPreview(file);
+            }
+        } else if (item.kind === 'string' && item.type === 'text/plain') {
+            foundText = true;
+            item.getAsString((text) => {
+                pastedText += text;
+                setTimeout(() => {
+                    if (pastedText && !foundFiles) {
+                        insertPlainTextAtCursor(messageInput, pastedText);
+                    }
+                }, 0);
+            });
+        }
+    }
+
+    if (!foundText && !foundFiles) {
+        const text = e.clipboardData.getData('text/plain');
+        if (text) {
+            insertPlainTextAtCursor(messageInput, text);
+        }
+    }
+}
+
+function insertPlainTextAtCursor(element, text) {
+    document.execCommand('insertText', false, text);
+}
+
 function handleFiles(files) {
     for (const file of files) {
         if (
@@ -570,7 +713,13 @@ async function processAttachedFiles(files) {
 }
 
 async function uploadFile(file) {
-    const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+    // Decide which key to use again each time upload occurs
+    // In case mode changes or anything, we re-initialize
+    const apiKey = await initializeChat();
+    if (!apiKey) {
+        throw new Error('No API key available for upload.');
+    }
+
     const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`;
 
     // Add event message
@@ -620,7 +769,6 @@ async function uploadFile(file) {
 
         while (fileState === 'PROCESSING') {
             eventMessage.querySelector('.message-content').innerText = `Processing file ${file.name}, please wait...`;
-            console.log(`Processing file ${file.name}, please wait...`);
             await new Promise(resolve => setTimeout(resolve, 3000));
 
             const fileStatusResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`);
@@ -722,10 +870,6 @@ function removeEventMessage(eventDiv) {
 
 function scrollToBottom() {
     chatHistory.scrollTop = chatHistory.scrollHeight;
-}
-
-if (localStorage.getItem(API_KEY_STORAGE_KEY)) {
-    initializeChat();
 }
 
 ['dragenter', 'dragover'].forEach(eventName => {
@@ -858,17 +1002,6 @@ body {
     flex-direction: column;
 }
 
-/* html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-} */
-
-/* html {
-    overflow: scroll;
-} */
-
 ::-webkit-scrollbar {
     width: 0px;
     background: transparent;
@@ -937,6 +1070,74 @@ body {
     padding: 0 0.5rem;
 }
 
+.show-key-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+}
+
+.error-settings-message {
+    color: var(--error-color);
+    margin-bottom: 1rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    margin: 0 1rem;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--text-primary);
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--bg-tertiary);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
 .header {
     position: absolute;
     top: 0;
@@ -950,18 +1151,48 @@ body {
     z-index: 100;
 }
 
-.header h1 {
-    font-size: 1.25rem;
+.greeting-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 1rem;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+}
+
+.greeting-title {
+    font-size: 2rem;
     font-weight: 600;
+    margin: 0;
     color: var(--text-primary);
 }
 
-.header .icon-button {
-    color: var(--text-secondary);
+.greeting-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-.header .icon-button:hover {
+.suggestion-bubble {
+    padding: 0.75rem 1rem;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: var(--transition-speed);
     color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.suggestion-bubble:hover {
+    background-color: var(--accent-hover);
 }
 
 .chat-container {
@@ -1029,12 +1260,10 @@ body {
 .processing-text {
     background: linear-gradient(270deg, #FFFFFF, #BBBBBB, #DDDDDD);
     background-size: 200% 100%;
-    
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     color: transparent;
-
     animation: gradientMoves 800ms linear infinite;
 }
 
@@ -1280,7 +1509,7 @@ button {
     justify-content: center;
     gap: 1rem;
     color: var(--text-primary);
-    border: 3px dashed var(--accent-color);
+    border: 3px dashed var(--border-color);
     margin: 2rem;
     border-radius: 16px;
 }
@@ -1467,6 +1696,7 @@ button {
 .viewer-nav.hidden {
     display: none;
 }
+
 ```
 
 public\tools.js
@@ -1672,8 +1902,10 @@ export const tools = [
 ];
 ```
 
-This all works well, but I want to make a change. In this current setup, the user has to manually set their API key. I want have another method built in. I want to have a file named `keys` in the public folder of my project; each line in it will contain an API key, filled by me. The web app will then have two modes: use app key / use personal key. I want the current `clear key` button to be replaced with a `settings` icon, that will open a settings modal. On this settings modal, there should be a toggle to switch between the use of app key, or personal key. This choice should be saved to local storage. The default should be the use of the app key. When this mode is on, the app should retrieve all the keys from the `keys` file as soon as the app loads, and should pick a key at random for each message send. When the personal key setting is picked, a text input box should appear under the toggle on the setting modal (the same one than currently implemented), where users can enter their own key. Any change to this text box should update the value of the key stored in local storage. Again, this key should be retrived from local storage whenever a new message is sent. This ensures the use of the correct key, or the rotation of it, every time.
-I want the settings modal to be refined, and the toggle should be a nice switch with Use App Key on the left, and Use Personal Key on the right. If a message is sent or the page is loaded with Use Personal Key selected but no key saved, the settings modal should open up again, but this time with a red message at it's top saying Please set your API key, or switch to App Key. Also, add a "Show Key" toggle next to the personal API entry box, to allow users to see their key if needed.
+This all works, but I need to make a couple changes:
 
+- remove the close button on the setting modal and have the ability to close it by clicking out of it.
+- have the show key checkmark be nicer and feel more like the rest of the web app.
+- have the send button in the tool bar actually act as the send button (like pressing enter).
 
-I want you to fully develop and implement this. Give me the full modified codes.
+I want you to fully develop and implement this.

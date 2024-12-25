@@ -68,6 +68,7 @@ body {
 }
 
 .input-wrapper input {
+    width: 90%;
     padding: 1rem;
     background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
@@ -174,6 +175,50 @@ input:checked + .slider:before {
     align-items: center;
     padding: 1rem;
     z-index: 100;
+}
+
+.greeting-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 1rem;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+}
+
+.greeting-title {
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.greeting-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.suggestion-bubble {
+    padding: 0.75rem 1rem;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: var(--transition-speed);
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.suggestion-bubble:hover {
+    background-color: var(--accent-hover);
 }
 
 .chat-container {
