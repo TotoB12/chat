@@ -56,6 +56,7 @@ const uploadButton = document.getElementById('upload-button');
 const sendButton = document.getElementById('send-button');
 const attachmentPreviewsContainer = document.querySelector('.attachment-previews');
 const fullscreenViewer = document.getElementById('fullscreen-viewer');
+const viewerContent = fullscreenViewer.querySelector('.viewer-content');
 const viewerImage = document.getElementById('viewer-image');
 const viewerText = document.getElementById('viewer-text');
 const viewerVideo = document.getElementById('viewer-video');
@@ -127,7 +128,6 @@ TotoB12: ![image](https://example.com/eiffel_tower.jpg) ![image](https://example
 
     model = genAI.getGenerativeModel({
         model: "gemini-2.0-flash-exp",
-        // model: "gemini-exp-1206",
         generationConfig: {
             temperature: 1.0,
         },
@@ -161,7 +161,6 @@ function setPersonalKey(key) {
     localStorage.setItem(API_KEY_STORAGE_KEY, key);
 }
 
-// Open/close settings modal
 openSettingsBtn.addEventListener('click', () => {
     openSettingsModal();
 });
@@ -370,6 +369,15 @@ async function processMessageParts(messageParts, assistantMessageEl) {
             ADD_ATTR: ['class', 'style', 'aria-hidden', 'focusable', 'role', 'tabindex', 'viewBox', 'xmlns', 'd'],
         });
         assistantMessageEl.innerHTML = sanitizedContent;
+
+        const newImages = assistantMessageEl.querySelectorAll('img');
+        newImages.forEach(img => {
+            img.style.cursor = 'pointer';
+            img.addEventListener('click', () => {
+                openFullscreenImage(img.src);
+            });
+        });
+
         scrollToBottom();
     }
 
@@ -587,7 +595,6 @@ async function processAttachedFiles(files) {
 
 async function uploadFile(file) {
     // Decide which key to use again each time upload occurs
-    // In case mode changes or anything, we re-initialize
     const apiKey = await initializeChat();
     if (!apiKey) {
         throw new Error('No API key available for upload.');
@@ -710,6 +717,14 @@ function addMessageToChat(role, content, attachments = []) {
 
     contentDiv.innerHTML = sanitizedContent;
 
+    const embeddedImages = contentDiv.querySelectorAll('img');
+    embeddedImages.forEach(img => {
+        img.style.cursor = 'pointer';
+        img.addEventListener('click', () => {
+            openFullscreenImage(img.src);
+        });
+    });
+
     messageDiv.appendChild(contentDiv);
     chatHistory.appendChild(messageDiv);
     scrollToBottom();
@@ -774,6 +789,22 @@ dropArea.addEventListener('drop', (e) => {
     dragCounter = 0;
 });
 
+function openFullscreenImage(imageUrl) {
+    viewerVideo.style.display = 'none';
+    viewerVideo.src = '';
+    viewerText.style.display = 'none';
+    viewerText.textContent = '';
+
+    viewerImage.style.display = 'block';
+    viewerImage.src = imageUrl;
+
+    prevButton.classList.add('hidden');
+    nextButton.classList.add('hidden');
+
+    fullscreenViewer.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
 function openFullscreenViewer(files, startIndex = 0) {
     currentFiles = files;
     currentFileIndex = startIndex;
@@ -823,6 +854,9 @@ function navigateViewer(direction) {
 }
 
 fullscreenViewer.querySelector('.viewer-close').addEventListener('click', closeFullscreenViewer);
+
+
+
 prevButton.addEventListener('click', () => navigateViewer(-1));
 nextButton.addEventListener('click', () => navigateViewer(1));
 
