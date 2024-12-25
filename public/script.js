@@ -95,10 +95,10 @@ async function initializeModel(apiKey) {
             category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
             threshold: HarmBlockThreshold.BLOCK_NONE,
         },
-        {
-            category: HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-        }
+        // {
+        //     category: HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
+        //     threshold: HarmBlockThreshold.BLOCK_NONE,
+        // }
     ];
     const preamble = `**System Directive**  
 You are **TotoB12**, a helpful assistant created by **Antonin Beliard**. Your mission is to interact with users across a wide range of topics, going beyond traditional boundaries to provide assistance. You are hosted on the website [**TotoB12 Chat**](https://chat.totob12.com).
