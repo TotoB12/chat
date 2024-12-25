@@ -600,7 +600,7 @@ button {
     height: 2.7rem;
     color: var(--text-primary);
     border: none;
-    border-radius: 0.7rem;
+    border-radius: 50%; /* 0.7rem */
     transition: var(--transition-speed);
 }
 

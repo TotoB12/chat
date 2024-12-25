@@ -13,11 +13,11 @@ const katexOptions = {
 marked.use(markedKatex(katexOptions));
 
 marked.use(markedHighlight({
-  langPrefix: 'hljs language-',
-  highlight(code, lang) {
-    const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-    return hljs.highlight(code, { language }).value;
-  }
+    langPrefix: 'hljs language-',
+    highlight(code, lang) {
+        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+        return hljs.highlight(code, { language }).value;
+    }
 }));
 
 const DOMPurify = createDOMPurify(window);
@@ -43,9 +43,7 @@ const keyModeToggle = document.getElementById('key-mode-toggle');
 const personalKeySection = document.getElementById('personal-key-section');
 const personalApiKeyInput = document.getElementById('personal-api-key-input');
 const showKeyToggle = document.getElementById('show-key-toggle');
-
 const openSettingsBtn = document.getElementById('open-settings');
-const closeSettingsModalBtn = document.getElementById('close-settings-modal');
 
 const greetingContainer = document.getElementById('greeting-container');
 const suggestionBubbles = document.querySelectorAll('.suggestion-bubble');
@@ -55,6 +53,7 @@ const chatHistory = document.getElementById('chat-history');
 const fileInput = document.getElementById('file-input');
 const dropArea = document.getElementById('drop-area');
 const uploadButton = document.getElementById('upload-button');
+const sendButton = document.getElementById('send-button');
 const attachmentPreviewsContainer = document.querySelector('.attachment-previews');
 const fullscreenViewer = document.getElementById('fullscreen-viewer');
 const viewerImage = document.getElementById('viewer-image');
@@ -167,11 +166,13 @@ openSettingsBtn.addEventListener('click', () => {
     openSettingsModal();
 });
 
-closeSettingsModalBtn.addEventListener('click', () => {
-    closeSettingsModal();
+settingsModal.addEventListener('click', (event) => {
+    if (event.target === settingsModal) {
+        closeSettingsModal();
+    }
 });
 
-function openSettingsModal(errorMessage='') {
+function openSettingsModal(errorMessage = '') {
     const currentMode = getMode();
     keyModeToggle.checked = (currentMode === 'personal');
     personalKeySection.style.display = currentMode === 'personal' ? 'block' : 'none';
@@ -244,6 +245,11 @@ uploadButton.addEventListener('click', (e) => {
 fileInput.addEventListener('change', (e) => {
     e.preventDefault();
     handleFiles(e.target.files);
+});
+
+sendButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    handleSubmit();
 });
 
 messageInput.addEventListener('keydown', (e) => {
