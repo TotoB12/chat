@@ -481,6 +481,10 @@ const toolTexts = {
         processing: "Looking up webpage...",
         done: "Looked up webpage."
     },
+    sendEmail: {
+        processing: "Sending email...",
+        done: "Sent email."
+    },
 };
 
 function handlePasteEvent(e) {

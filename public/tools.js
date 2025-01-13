@@ -83,6 +83,21 @@ async function lookWebpage(link) {
     }
 }
 
+async function sendEmail(email, subject, body) {
+    email = btoa(email);
+    subject = btoa(subject);
+    body = btoa(body);
+    const url = `https://api.totob12.com/send-email?email=${encodeURIComponent(email)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    try {
+        const response = await fetch(url);
+        let data = await response.json();
+        return data;
+    } catch (error) {
+        console.error(error);
+        return { error: error.message };
+    }
+}
+
 export const functions = {
     getDateAndTime: () => {
         return getDateAndTime()
@@ -104,6 +119,9 @@ export const functions = {
     },
     lookWebpage: ({ link }) => {
         return lookWebpage(link);
+    },
+    sendEmail: ({ email, subject, body }) => {
+        return sendEmail(email, subject, body);
     },
 };
 
@@ -194,6 +212,28 @@ export const tools = [
                 },
             },
             required: ["link"],
+        },
+    },
+    {
+        name: "sendEmail",
+        parameters: {
+            type: "OBJECT",
+            description: "Send an email to a recipient. This will be send from chat@totob12.com",
+            properties: {
+                email: {
+                    type: "STRING",
+                    description: "The email address of the recipient",
+                },
+                subject: {
+                    type: "STRING",
+                    description: "The subject of the email",
+                },
+                body: {
+                    type: "STRING",
+                    description: "The body of the email",
+                },
+            },
+            required: ["email", "subject", "body"],
         },
     },
 ];
