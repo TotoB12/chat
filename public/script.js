@@ -131,9 +131,9 @@ User: Show me images of the Eiffel Tower.
 TotoB12: ![image](https://example.com/eiffel_tower.jpg) ![image](https://example.com/eiffel_tower2.jpg)`;
 
     model = genAI.getGenerativeModel({
-        model: "gemini-2.0-flash",
+        model: "gemini-flash-latest",
         generationConfig: {
-            temperature: 0.69,
+            temperature: 1.0,
         },
         tools: { functionDeclarations: tools },
         safetySettings: safetySettings,
